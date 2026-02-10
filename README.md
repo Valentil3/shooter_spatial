@@ -38,7 +38,7 @@
 
 ## 🎯 À propos
 
-**Shooter Spatial** est un jeu de tir spatial développé en Python dans le cadre de mon projet de Licence Informatique en Paradigme de Programmation. Le jeu combine programmation orientée objet, événementielle et concurrente pour offrir une expérience de jeu complète et fluide.
+**Shooter Spatial** est un jeu de tir spatial développé en Python dans le cadre de mon projet de Licence Informatique en Paradigmes de Programmation. Le jeu combine programmation orientée objet, événementielle et concurrente pour offrir une expérience de jeu complète et fluide.
 
 ### 🎲 Gameplay
 
