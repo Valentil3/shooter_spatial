@@ -1,0 +1,189 @@
+@startuml Shooter_Spatial_Classes
+
+' Configuration pour un diagramme clair et structuré
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 80
+skinparam class {
+    BackgroundColor LightYellow
+    BorderColor Black
+    ArrowColor Black
+    FontSize 11
+}
+skinparam package {
+    BackgroundColor WhiteSmoke
+    BorderColor Black
+    FontStyle bold
+}
+
+' Disposition top to bottom (comme l'image)
+top to bottom direction
+
+' ============ CLASSE ABSTRAITE DE BASE ============
+
+abstract class ObjetVolant {
+    # x, y : float
+    # largeur, hauteur : float
+    # actif : bool
+    --
+    + deplacer(dx, dy)
+    + collision_avec(autre)
+}
+
+' ============ CLASSES HÉRITÉES (Objets du jeu) ============
+
+package "Objets du Jeu" {
+    class Vaisseau {
+        - vies : int
+        - invincible_jusqu_a : int
+        - vitesse_base : float
+        - tir_double : bool
+        - tir_triple : bool
+        --
+        + deplacer_gauche/droite/haut/bas()
+        + tirer() : List<Projectile>
+        + perdre_vie() : bool
+        + gagner_vie()
+        + activer_bonus()
+    }
+
+    class Ennemi {
+        - vitesse : float
+        - points : int
+        --
+        + avancer()
+    }
+
+    class Projectile {
+        - vitesse : int
+        --
+        + avancer()
+    }
+
+    class Bonus {
+        - type : str
+        - info : Dict
+        --
+        + avancer()
+    }
+}
+
+' ============ MOTEUR DE JEU ============
+
+package "Moteur de Jeu" {
+    class GameEngine {
+        - vaisseau : Vaisseau
+        - ennemis : List<Ennemi>
+        - projectiles : List<Projectile>
+        - bonus : List<Bonus>
+        - score : int
+        - jeu_termine : bool
+        --
+        + ajouter_ennemi()
+        + ajouter_bonus()
+        + tirer()
+        + mettre_a_jour()
+    }
+}
+
+' ============ GESTION DES DONNÉES ============
+
+package "Gestion des Données" {
+    class ScoreManager {
+        - fichier : Path
+        - scores : Dict
+        --
+        + enregistrer_score() : bool
+        + obtenir_classement()
+        + exporter_html()
+    }
+}
+
+' ============ THREADS ============
+
+package "Threads" {
+    class MusiqueThread {
+        - actif : bool
+        - en_pause : bool
+        --
+        + run()
+        + pause()
+        + set_volume()
+    }
+}
+
+' ============ INTERFACE UTILISATEUR ============
+
+package "Interface Utilisateur" {
+    class ShooterGUI {
+        - game_engine : GameEngine
+        - score_manager : ScoreManager
+        - musique : MusiqueThread
+        --
+        + lancer_jeu()
+        + boucle_mise_a_jour()
+        + dessiner()
+    }
+
+    class ShooterConsole {
+        - game_engine : GameEngine
+        - score_manager : ScoreManager
+        --
+        + lancer_jeu()
+        + afficher_grille()
+        + gerer_touches()
+    }
+
+    class MenuPrincipal {
+        - canvas : Canvas
+        - etoiles : List
+        --
+        + afficher()
+        + animer_fond()
+    }
+}
+
+' ============ RELATIONS D'HÉRITAGE ============
+
+ObjetVolant <|-- Vaisseau
+ObjetVolant <|-- Ennemi
+ObjetVolant <|-- Projectile
+ObjetVolant <|-- Bonus
+
+' ============ RELATIONS DE COMPOSITION ============
+
+
+ShooterConsole "1" *-down- "1" GameEngine : utilise
+ShooterConsole "1" *-right- "1" ScoreManager : utilise
+GameEngine "1" *-down- "1" Vaisseau : contient
+GameEngine "1" o-down- "0..*" Ennemi : gère
+GameEngine "1" o-down- "0..*" Projectile : gère
+GameEngine "1" o-down- "0..*" Bonus : gère
+
+ShooterGUI "1" *-down- "1" GameEngine : utilise
+ShooterGUI "1" *-right- "1" ScoreManager : utilise
+ShooterGUI "1" o-right- "0..1" MusiqueThread : utilise
+ShooterGUI "1" -down- "1" MenuPrincipal : contient
+
+' ============ LÉGENDE ============
+
+legend top left
+    **Shooter Spatial - Architecture POO**
+    ----
+    Classes héritées d'ObjetVolant :
+    • Vaisseau (joueur)
+    • Ennemi (adversaire)
+    • Projectile (tir)
+    • Bonus (collectables)
+    ----
+    Bonus disponibles :
+    • Vie +1
+    • Vitesse x1.5
+    • Tir double/triple
+    • Tir rapide
+end legend
+
+@enduml

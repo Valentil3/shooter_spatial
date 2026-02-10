@@ -1,0 +1,231 @@
+{
+  "Val": {
+    "meilleur_score": 70,
+    "parties_jouees": 4,
+    "score_total": 160,
+    "historique": [
+      {
+        "score": 60,
+        "date": "2026-01-30 18:42:39"
+      },
+      {
+        "score": 0,
+        "date": "2026-01-30 19:03:37"
+      },
+      {
+        "score": 70,
+        "date": "2026-01-30 19:04:13"
+      },
+      {
+        "score": 30,
+        "date": "2026-01-31 16:01:26"
+      }
+    ]
+  },
+  "Vale": {
+    "meilleur_score": 550,
+    "parties_jouees": 8,
+    "score_total": 1550,
+    "historique": [
+      {
+        "score": 80,
+        "date": "2026-01-31 16:26:55"
+      },
+      {
+        "score": 130,
+        "date": "2026-01-31 16:37:01"
+      },
+      {
+        "score": 70,
+        "date": "2026-01-31 16:48:41"
+      },
+      {
+        "score": 20,
+        "date": "2026-01-31 16:48:59"
+      },
+      {
+        "score": 150,
+        "date": "2026-01-31 16:50:26"
+      },
+      {
+        "score": 450,
+        "date": "2026-01-31 16:52:46"
+      },
+      {
+        "score": 550,
+        "date": "2026-02-02 15:20:33"
+      },
+      {
+        "score": 100,
+        "date": "2026-02-04 16:06:40"
+      }
+    ]
+  },
+  "Valee": {
+    "meilleur_score": 580,
+    "parties_jouees": 1,
+    "score_total": 580,
+    "historique": [
+      {
+        "score": 580,
+        "date": "2026-01-31 16:55:47"
+      }
+    ]
+  },
+  "Test": {
+    "meilleur_score": 220,
+    "parties_jouees": 8,
+    "score_total": 1020,
+    "historique": [
+      {
+        "score": 40,
+        "date": "2026-02-02 15:23:09"
+      },
+      {
+        "score": 220,
+        "date": "2026-02-02 15:26:48"
+      },
+      {
+        "score": 130,
+        "date": "2026-02-04 16:13:24"
+      },
+      {
+        "score": 160,
+        "date": "2026-02-04 16:31:02"
+      },
+      {
+        "score": 210,
+        "date": "2026-02-04 16:38:45"
+      },
+      {
+        "score": 100,
+        "date": "2026-02-07 18:19:30"
+      },
+      {
+        "score": 110,
+        "date": "2026-02-07 18:25:31"
+      },
+      {
+        "score": 50,
+        "date": "2026-02-07 18:51:24"
+      }
+    ]
+  },
+  "Test$": {
+    "meilleur_score": 90,
+    "parties_jouees": 1,
+    "score_total": 90,
+    "historique": [
+      {
+        "score": 90,
+        "date": "2026-02-07 18:12:06"
+      }
+    ]
+  },
+  "Ceci est un test": {
+    "meilleur_score": 180,
+    "parties_jouees": 1,
+    "score_total": 180,
+    "historique": [
+      {
+        "score": 180,
+        "date": "2026-02-07 18:55:34"
+      }
+    ]
+  },
+  "Testt": {
+    "meilleur_score": 20,
+    "parties_jouees": 2,
+    "score_total": 30,
+    "historique": [
+      {
+        "score": 20,
+        "date": "2026-02-07 18:56:12"
+      },
+      {
+        "score": 10,
+        "date": "2026-02-07 19:19:39"
+      }
+    ]
+  },
+  "Tester": {
+    "meilleur_score": 40,
+    "parties_jouees": 9,
+    "score_total": 110,
+    "historique": [
+      {
+        "score": 0,
+        "date": "2026-02-07 19:06:42"
+      },
+      {
+        "score": 10,
+        "date": "2026-02-07 19:15:28"
+      },
+      {
+        "score": 30,
+        "date": "2026-02-07 19:20:01"
+      },
+      {
+        "score": 0,
+        "date": "2026-02-07 19:21:06"
+      },
+      {
+        "score": 0,
+        "date": "2026-02-07 19:21:25"
+      },
+      {
+        "score": 30,
+        "date": "2026-02-07 19:24:51"
+      },
+      {
+        "score": 0,
+        "date": "2026-02-07 20:15:22"
+      },
+      {
+        "score": 40,
+        "date": "2026-02-07 20:15:44"
+      },
+      {
+        "score": 0,
+        "date": "2026-02-07 20:18:41"
+      }
+    ]
+  },
+  "Tesyer": {
+    "meilleur_score": 10,
+    "parties_jouees": 1,
+    "score_total": 10,
+    "historique": [
+      {
+        "score": 10,
+        "date": "2026-02-07 19:14:44"
+      }
+    ]
+  },
+  "Teste": {
+    "meilleur_score": 0,
+    "parties_jouees": 1,
+    "score_total": 0,
+    "historique": [
+      {
+        "score": 0,
+        "date": "2026-02-07 19:23:38"
+      }
+    ]
+  },
+  "TEster": {
+    "meilleur_score": 30,
+    "parties_jouees": 2,
+    "score_total": 30,
+    "historique": [
+      {
+        "score": 30,
+        "date": "2026-02-07 19:26:37"
+      },
+      {
+        "score": 0,
+        "date": "2026-02-07 20:19:44"
+      }
+    ]
+  }
+}

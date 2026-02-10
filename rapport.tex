@@ -1,0 +1,1016 @@
+\documentclass[12pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+
+% Configuration de la page
+\geometry{margin=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Shooter Spatial}
+\lhead{Projet Paradigmes de Programmation}
+\rfoot{\thepage}
+
+% Configuration des listings de code
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b
+}
+
+% Configuration des liens
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=cyan
+}
+
+\begin{document}
+
+% Page de titre personnalisée
+\begin{titlepage}
+    \centering
+    
+    \vspace*{2cm}
+    
+    % Titre principal
+    {\Huge\bfseries Shooter Spatial\par}
+    
+    \vspace{0.5cm}
+    {\large \texttt{🚀 ⭐ 🛸}\par}
+    
+    \vspace{1.5cm}
+    
+    % Ligne décorative
+    \rule{\textwidth}{1pt}
+    
+    \vspace{1cm}
+    
+    % Sous-titre
+    {\Large\bfseries Projet de Paradigmes de Programmation\par}
+    
+    \vspace{0.5cm}
+    
+    {\large Licence Informatique\par}
+    
+    \vspace{1cm}
+    
+    % Ligne décorative
+    \rule{\textwidth}{1pt}
+    
+    \vfill
+    
+    % Description
+    {\large 
+    \begin{tabular}{rl}
+        \textbf{Paradigmes :} & Orienté Objet, Procédural, Événementiel, Concurrent \\[0.3cm]
+        \textbf{Langage :} & Python 3.7+ \\[0.3cm]
+        \textbf{Technologies :} & tkinter, threading, pygame, JSON, HTML/CSS \\
+    \end{tabular}
+    \par}
+    
+    \vfill
+    
+    % Auteur
+    {\large\textbf{Réalisé par}\par}
+    \vspace{0.3cm}
+    {\Large Valentin Lesnes\par}
+    
+    \vspace{2cm}
+    
+\end{titlepage}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+\subsection{Contexte du projet}
+
+Ce projet s'inscrit dans le cadre du cours de Paradigmes de Programmation en Licence Informatique. L'objectif est de développer un mini-jeu complet intégrant plusieurs paradigmes de programmation : procédural, orienté objet, événementiel et concurrent. Tout en incluant une documentation complète.
+
+\subsection{Choix du jeu : Shooter Spatial}
+
+Le jeu choisi est un \textbf{shooter spatial en 2D} de type arcade. Le joueur contrôle un vaisseau spatial qui doit détruire des ennemis (astéroïdes) descendant vers lui. Ce type de jeu, inspiré des classiques comme Space Invaders, permet d'illustrer efficacement tous les paradigmes requis.
+
+\subsection{Objectifs pédagogiques}
+
+\begin{itemize}
+    \item Maîtriser la programmation orientée objet (POO) avec héritage et polymorphisme
+    \item Implémenter une logique procédurale pour la boucle de jeu
+    \item Gérer les événements utilisateur (clavier, souris) dans une interface graphique
+    \item Utiliser la programmation concurrente avec des threads
+    \item Sauvegarder et charger des données persistantes (scores)
+    \item Créer une interface web pour visualiser les scores
+\end{itemize}
+
+\section{Description du Gameplay}
+
+\subsection{Règles du jeu}
+
+\paragraph{Objectif principal}
+Le joueur doit détruire un maximum d'ennemis pour accumuler des points. La partie se termine quand le joueur perd tous ces points de vie (ennemi atteint le bas de l'écran = - 1 vie).
+
+\paragraph{Mécaniques de jeu}
+\begin{itemize}
+    \item \textbf{Déplacement} : Le vaisseau peut se déplacer dans les 4 directions (gauche/droite/haut/bas)
+    \item \textbf{Tir} : Le joueur peut tirer des projectiles vers le haut avec cooldown
+    \item \textbf{Ennemis} : Des ennemis apparaissent périodiquement en haut et descendent
+    \item \textbf{Collision} : Un projectile qui touche un ennemi les détruit tous les deux
+    \item \textbf{Points} : Chaque ennemi détruit rapporte 10 points
+    \item \textbf{Vies} : Le joueur dispose de 3 vies (extensible à 5 avec bonus)
+    \item \textbf{Bonus} : 5 types de bonus tombent aléatoirement (vie, vitesse, tirs multiples)
+    \item \textbf{Difficulté progressive} : Vitesse et fréquence d'apparition augmentent
+    \item \textbf{Invincibilité} : Courte période d'invincibilité après avoir perdu une vie
+\end{itemize}
+
+\subsection{Conditions de victoire et défaite}
+
+\paragraph{Objectif}
+Le jeu est un survival shooter : l'objectif est de survivre le plus longtemps possible et d'accumuler le maximum de points.
+
+\paragraph{Défaite}
+\begin{itemize}
+    \item Toutes les vies sont perdues (3 vies de départ)
+    \item Un ennemi touche le vaisseau : -1 vie
+    \item Un ennemi atteint le bas de l'écran : -1 vie
+\end{itemize}
+
+\paragraph{Système de vies et bonus}
+\begin{itemize}
+    \item \textbf{Vies de départ} : 3 vies
+    \item \textbf{Maximum} : 5 vies (avec bonus)
+    \item \textbf{Invincibilité} : Après perte d'une vie, 20 frames d'invincibilité
+    \item \textbf{Bonus vie} : Collectables pour gagner une vie supplémentaire
+\end{itemize}
+
+\section{Conception Logicielle}
+
+\subsection{Architecture générale}
+
+Le projet est structuré en plusieurs modules Python pour respecter le principe de séparation des responsabilités :
+
+\begin{itemize}
+    \item \texttt{game\_classes.py} : Classes du modèle de jeu (POO)
+    \begin{itemize}
+        \item ObjetVolant (classe abstraite)
+        \item Vaisseau, Ennemi, Projectile, Bonus
+        \item GameEngine (moteur de jeu)
+    \end{itemize}
+    \item \texttt{score\_manager.py} : Gestion des scores avec historique et statistiques
+    \item \texttt{shooter\_console.py} : Version console avec support plein écran
+    \item \texttt{shooter\_gui.py} : Version graphique avec menu et interface responsive
+    \item \texttt{serveur\_web.py} : Serveur HTTP pour le leaderboard web
+    \item \texttt{index.html} : Page web du leaderboard (générée par score\_manager)
+\end{itemize}
+
+\subsection{Diagramme de classes}
+
+Le fichier \textbf{Shooter\_Spatial\_Classes\_converted.pdf} présente le diagramme de classes UML du projet. On observe une hiérarchie d'héritage claire avec la classe abstraite \texttt{ObjetVolant} dont héritent \texttt{Vaisseau}, \texttt{Ennemi} et \texttt{Projectile}.
+
+\subsection{Classes principales}
+
+\subsubsection{ObjetVolant (classe abstraite)}
+
+Classe de base pour tous les objets du jeu possédant une position et pouvant entrer en collision.
+
+\begin{lstlisting}[caption=Classe ObjetVolant]
+class ObjetVolant:
+    def __init__(self, x: int, y: int, largeur: int, hauteur: int):
+        self.x = x
+        self.y = y
+        self.largeur = largeur
+        self.hauteur = hauteur
+        self.actif = True
+    
+    def deplacer(self, dx: int, dy: int):
+        self.x += dx
+        self.y += dy
+    
+    def collision_avec(self, autre: 'ObjetVolant') -> bool:
+        return (self.x < autre.x + autre.largeur and
+                self.x + self.largeur > autre.x and
+                self.y < autre.y + autre.hauteur and
+                self.y + self.hauteur > autre.y)
+\end{lstlisting}
+
+\subsubsection{Vaisseau}
+
+Représente le vaisseau du joueur avec système de vies, bonus et tirs multiples.
+
+\textbf{Attributs principaux :}
+\begin{itemize}
+    \item \texttt{vies} : Nombre de vies (3 à 5)
+    \item \texttt{invincible\_jusqu\_a} : Frame jusqu'à laquelle le vaisseau est invincible
+    \item \texttt{vitesse\_base} : Vitesse de déplacement (adaptée à la taille d'écran)
+    \item \texttt{vitesse\_bonus} : Multiplicateur de vitesse (1.0 ou 1.5)
+    \item \texttt{tir\_double}, \texttt{tir\_triple} : Modes de tir spéciaux
+    \item \texttt{bonus\_actif\_jusqu\_a} : Dict des bonus actifs avec leur durée
+\end{itemize}
+
+\subsubsection{Ennemi}
+
+Représente un ennemi avec vitesse variable et déplacement progressif.
+
+\textbf{Particularité :} Utilise \texttt{deplacement\_fractionnaire} pour un mouvement fluide même à faible vitesse.
+
+\subsubsection{Projectile}
+
+Représente un tir du joueur. Monte automatiquement à vitesse fixe.
+
+\subsubsection{Bonus}
+
+Représente un bonus collectable avec 5 types différents :
+\begin{itemize}
+    \item \textbf{Vie (+)} : Ajoute une vie (max 5)
+    \item \textbf{Vitesse (>>)} : Augmente vitesse de 50\% pendant 10 secondes
+    \item \textbf{Tir double (=)} : Tire 2 projectiles simultanément
+    \item \textbf{Tir triple (≡)} : Tire 3 projectiles simultanément
+    \item \textbf{Tir rapide (!!!)} : Réduit le cooldown de moitié
+\end{itemize}
+
+Chaque bonus a un poids de probabilité d'apparition différent.
+
+\subsubsection{GameEngine}
+
+Moteur de jeu principal qui coordonne toute la logique avec système de frames.
+
+\textbf{Responsabilités :}
+\begin{itemize}
+    \item Gestion des listes d'objets (ennemis, projectiles, bonus)
+    \item Détection de collisions (projectile-ennemi, vaisseau-ennemi, vaisseau-bonus)
+    \item Mise à jour du score et état du jeu
+    \item Gestion de l'invincibilité temporaire
+    \item Vérification si un bonus peut être ramassé (pas de doublon)
+    \item Système de frames pour le timing des événements
+\end{itemize}
+
+\subsubsection{ScoreManager}
+
+Gère la persistance des scores avec historique et statistiques complètes.
+
+\textbf{Fonctionnalités :}
+\begin{itemize}
+    \item Sauvegarde du meilleur score par joueur
+    \item Historique des 10 dernières parties
+    \item Statistiques : parties jouées, score moyen, score total
+    \item Classement des meilleurs joueurs
+    \item Export HTML du leaderboard pour affichage web
+\end{itemize}
+
+\section{Implémentation des Paradigmes}
+
+\subsection{Programmation Orientée Objet (POO)}
+
+\paragraph{Héritage}
+La hiérarchie de classes illustre l'héritage : \texttt{Vaisseau}, \texttt{Ennemi}, \texttt{Projectile} et \texttt{Bonus} héritent tous d'\texttt{ObjetVolant}, factorisant ainsi les attributs et méthodes communs (position, déplacement, collision).
+
+\paragraph{Encapsulation}
+Chaque classe encapsule ses données et expose des méthodes publiques claires. Par exemple, \texttt{GameEngine} cache sa logique interne de vérification de collisions dans des méthodes privées (\texttt{\_verifier\_collisions}, \texttt{\_peut\_ramasser\_bonus}).
+
+\paragraph{Polymorphisme}
+La méthode \texttt{collision\_avec()} peut être appelée sur n'importe quel \texttt{ObjetVolant}, démontrant le polymorphisme. Tous les objets répondent à la même interface commune.
+
+\subsection{Système de Bonus}
+
+Le système de bonus illustre la POO avec une classe dédiée et un système de types :
+
+\begin{lstlisting}[caption=Système de bonus avec probabilités]
+class Bonus(ObjetVolant):
+    TYPES = {
+        "vie": {"nom": "Vie +1", "couleur": "#ff00ff", 
+                "icone": "+", "poids": 15},
+        "vitesse": {"nom": "Vitesse", "couleur": "#00ffff", 
+                    "icone": ">>", "poids": 25},
+        "tir_double": {"nom": "Tir Double", "couleur": "#ffff00", 
+                       "icone": "=", "poids": 25},
+        "tir_triple": {"nom": "Tir Triple", "couleur": "#ff8800", 
+                       "icone": "≡", "poids": 15},
+        "tir_rapide": {"nom": "Tir Rapide", "couleur": "#ff0000", 
+                       "icone": "!!!", "poids": 20},
+    }
+    
+    def __init__(self, x, y):
+        super().__init__(x, y, largeur=1, hauteur=1)
+        # Selection aleatoire ponderee par les poids
+        types_disponibles = list(self.TYPES.keys())
+        poids = [self.TYPES[t]["poids"] for t in types_disponibles]
+        self.type = random.choices(types_disponibles, 
+                                   weights=poids, k=1)[0]
+\end{lstlisting}
+
+\paragraph{Gestion des bonus actifs}
+Le vaisseau utilise un dictionnaire pour gérer les bonus temporaires :
+
+\begin{lstlisting}[caption=Activation et expiration des bonus]
+def activer_bonus(self, type_bonus, frame_actuelle, duree=300):
+    if type_bonus == "vitesse":
+        self.vitesse_bonus = 1.5
+        self.bonus_actif_jusqu_a["vitesse"] = frame_actuelle + duree
+    # ... autres bonus ...
+
+def mettre_a_jour_bonus(self, frame_actuelle):
+    bonus_a_retirer = []
+    for type_bonus, frame_fin in self.bonus_actif_jusqu_a.items():
+        if frame_actuelle >= frame_fin:
+            bonus_a_retirer.append(type_bonus)
+            # Desactiver le bonus
+    for type_bonus in bonus_a_retirer:
+        del self.bonus_actif_jusqu_a[type_bonus]
+\end{lstlisting}
+
+\subsection{Programmation Procédurale}
+
+La version console utilise une approche procédurale dans sa boucle principale :
+
+\begin{lstlisting}[caption=Boucle de jeu procédurale]
+def boucle_jeu_procedurale(game_engine):
+    while not game_engine.jeu_termine:
+        # 1. Afficher l'état
+        afficher_grille(game_engine)
+        
+        # 2. Lire commande
+        cmd = lire_commande()
+        
+        # 3. Traiter commande
+        if cmd == 'q':
+            game_engine.vaisseau.deplacer_gauche()
+        elif cmd == 'd':
+            game_engine.vaisseau.deplacer_droite()
+        elif cmd == ' ':
+            game_engine.tirer()
+        
+        # 4. Mettre à jour
+        game_engine.mettre_a_jour()
+        
+        # 5. Vérifier victoire
+        game_engine.verifier_victoire()
+\end{lstlisting}
+
+Cette approche séquentielle et linéaire est caractéristique du paradigme procédural.
+
+\subsection{Programmation Événementielle}
+
+La version graphique avec \texttt{tkinter} utilise le paradigme événementiel :
+
+\begin{lstlisting}[caption=Gestion des événements clavier]
+class ShooterGUI:
+    def __init__(self, root):
+        # ...
+        # Liaison des événements
+        self.root.bind('<Left>', self.deplacer_gauche)
+        self.root.bind('<Right>', self.deplacer_droite)
+        self.root.bind('<space>', self.tirer)
+    
+    def deplacer_gauche(self, event):
+        """Callback déclenché par l'événement Left"""
+        if self.jeu_en_cours:
+            self.game_engine.vaisseau.deplacer_gauche()
+    
+    def tirer(self, event):
+        """Callback déclenché par l'événement Space"""
+        if self.jeu_en_cours:
+            self.game_engine.tirer()
+\end{lstlisting}
+
+Les \textbf{timers} sont également des mécanismes événementiels :
+
+\begin{lstlisting}[caption=Timer pour mise à jour périodique]
+def boucle_mise_a_jour(self):
+    if not self.jeu_en_cours:
+        return
+    
+    # Logique de mise à jour
+    self.game_engine.mettre_a_jour()
+    self.dessiner()
+    
+    # Relancer le timer (événement récurrent)
+    self.timer_jeu = self.root.after(50, self.boucle_mise_a_jour)
+\end{lstlisting}
+
+\subsection{Programmation Concurrente (Threads)}
+
+Trois threads s'exécutent en parallèle de la boucle principale pour améliorer l'expérience de jeu :
+
+\paragraph{Thread Musique}
+Joue la musique de fond sans bloquer le jeu, avec support de pause/reprise :
+
+\begin{lstlisting}[caption=Thread de musique avec pygame]
+class MusiqueThread(threading.Thread):
+    def __init__(self, fichier="musique.mp3"):
+        super().__init__(daemon=True)
+        self.actif = True
+        self.en_pause = False
+        pygame.mixer.init()
+        pygame.mixer.music.load(fichier)
+        pygame.mixer.music.set_volume(0.3)
+    
+    def run(self):
+        pygame.mixer.music.play(-1)  # Boucle infinie
+        while self.actif:
+            time.sleep(0.5)
+    
+    def pause(self):
+        self.en_pause = True
+        pygame.mixer.music.pause()
+    
+    def reprendre(self):
+        self.en_pause = False
+        pygame.mixer.music.unpause()
+\end{lstlisting}
+
+\paragraph{Thread Spawner Ennemis}
+Fait apparaître des ennemis périodiquement avec difficulté progressive :
+
+\begin{lstlisting}[caption=Spawner avec difficulte adaptative]
+class SpawnerThread(threading.Thread):
+    def __init__(self, game_engine):
+        super().__init__(daemon=True)
+        self.game_engine = game_engine
+        self.intervalle = 2.0  # secondes
+        self.vitesse = 0.3
+    
+    def run(self):
+        while not self.game_engine.jeu_termine:
+            time.sleep(self.intervalle)
+            self.game_engine.ajouter_ennemi(self.vitesse)
+    
+    def ajuster_difficulte(self, ennemis_detruits):
+        # Augmenter vitesse et frequence
+        niveau = 1 + (ennemis_detruits // 5)
+        self.vitesse = min(2.0, 0.3 * 1.08 ** niveau)
+        self.intervalle = max(0.8, 2.0 - niveau * 0.3)
+\end{lstlisting}
+
+\paragraph{Thread Spawner Bonus}
+Fait apparaître des bonus aléatoirement avec probabilité :
+
+\begin{lstlisting}[caption=Spawner de bonus aleatoire]
+class BonusSpawnerThread(threading.Thread):
+    def run(self):
+        while not self.game_engine.jeu_termine:
+            # Intervalle aleatoire 8-15 secondes
+            temps = random.uniform(8.0, 15.0)
+            time.sleep(temps)
+            
+            # 30% de chance d'apparition
+            if random.random() < 0.3:
+                self.game_engine.ajouter_bonus()
+\end{lstlisting}
+
+Ces threads démontrent la \textbf{programmation parallèle} : plusieurs tâches s'exécutent simultanément (musique, spawn ennemis, spawn bonus, boucle principale), améliorant la fluidité et la réactivité du jeu.
+
+\section{Gestion des Scores}
+
+\subsection{Format de sauvegarde JSON}
+
+Les scores sont sauvegardés avec un historique complet et des statistiques détaillées :
+
+\begin{lstlisting}[language=json,caption=Format JSON des scores avec historique]
+{
+  "Alice": {
+    "meilleur_score": 230,
+    "parties_jouees": 12,
+    "score_total": 1850,
+    "historique": [
+      {"score": 180, "date": "2026-02-08 14:30:25"},
+      {"score": 230, "date": "2026-02-08 15:12:10"},
+      ...
+    ]
+  },
+  "Bob": {
+    "meilleur_score": 180,
+    "parties_jouees": 5,
+    "score_total": 750,
+    "historique": [...]
+  }
+}
+\end{lstlisting}
+
+\subsection{Classe ScoreManager}
+
+La classe \texttt{ScoreManager} gère toutes les opérations sur les scores avec fonctionnalités avancées :
+
+\begin{itemize}
+    \item \textbf{Chargement} : Lecture du fichier JSON au démarrage avec gestion d'erreurs
+    \item \textbf{Sauvegarde} : Écriture automatique après chaque partie
+    \item \textbf{Enregistrement} : Mise à jour du meilleur score et de l'historique
+    \item \textbf{Historique} : Conservation des 10 dernières parties
+    \item \textbf{Statistiques} : Calcul du score moyen, total, nombre de parties
+    \item \textbf{Classement} : Tri des scores par ordre décroissant
+    \item \textbf{Export HTML} : Génération d'une page web interactive
+\end{itemize}
+
+\begin{lstlisting}[caption=Méthode d'enregistrement avec historique]
+def enregistrer_score(self, joueur: str, score: int) -> bool:
+    ancien_record = self.obtenir_meilleur_score(joueur)
+    nouveau_record = score > ancien_record
+    
+    if joueur not in self.scores:
+        self.scores[joueur] = {
+            "meilleur_score": 0,
+            "parties_jouees": 0,
+            "score_total": 0,
+            "historique": []
+        }
+    
+    # Mettre a jour les statistiques
+    self.scores[joueur]["parties_jouees"] += 1
+    self.scores[joueur]["score_total"] += score
+    
+    if score > self.scores[joueur]["meilleur_score"]:
+        self.scores[joueur]["meilleur_score"] = score
+    
+    # Ajouter a l'historique avec timestamp
+    self.scores[joueur]["historique"].append({
+        "score": score,
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    # Garder seulement les 10 dernieres parties
+    if len(self.scores[joueur]["historique"]) > 10:
+        self.scores[joueur]["historique"] = \
+            self.scores[joueur]["historique"][-10:]
+    
+    self._sauvegarder_scores()
+    return nouveau_record
+\end{lstlisting}
+
+\section{Interface Graphique}
+
+\subsection{Choix technologique : tkinter}
+
+La bibliothèque \texttt{tkinter} a été choisie car :
+\begin{itemize}
+    \item Elle est incluse dans Python (pas de dépendance externe)
+    \item Elle permet la gestion d'événements (clavier, souris, timers)
+    \item Elle offre un canvas pour le dessin 2D
+    \item Elle supporte le redimensionnement dynamique
+\end{itemize}
+
+\subsection{Architecture de l'interface}
+
+L'interface graphique est organisée en plusieurs écrans :
+
+\paragraph{Menu Principal (MenuPrincipal)}
+\begin{itemize}
+    \item Fond animé avec étoiles défilantes
+    \item Boutons : Jouer, Instructions, Scores, Quitter
+    \item Titre avec effet de glow animé
+    \item Responsive : adaptation automatique à la taille d'écran
+\end{itemize}
+
+\paragraph{Écran Instructions}
+\begin{itemize}
+    \item Explications des contrôles et mécaniques
+    \item Liste des bonus avec leurs effets
+    \item Scrollable pour petit écran
+\end{itemize}
+
+\paragraph{Écran Scores}
+\begin{itemize}
+    \item Affichage du classement des 10 meilleurs joueurs
+    \item Médailles pour le top 3 (������)
+    \item Bouton pour ouvrir le leaderboard web
+    \item Couleurs différenciées par rang
+\end{itemize}
+
+\paragraph{Écran de Jeu}
+\begin{itemize}
+    \item Canvas principal avec fond spatial animé
+    \item Affichage en temps réel : score, vies, temps, niveau
+    \item Indicateurs de bonus actifs avec couleurs
+    \item Support du redimensionnement en plein écran
+    \item Contrôles musique (pause, volume)
+\end{itemize}
+
+\subsection{Gestion des événements}
+
+L'interface graphique réagit à plusieurs types d'événements :
+
+\begin{itemize}
+    \item \textbf{Événements clavier} : Flèches directionnelles (← → ↑ ↓), ESPACE, P (pause musique), ESC (quitter)
+    \item \textbf{Événements bouton} : Clics sur les boutons du menu
+    \item \textbf{Événements timer} : Mise à jour périodique (30-50ms), spawn d'ennemis, spawn de bonus
+    \item \textbf{Événements redimensionnement} : Adaptation dynamique des dimensions du jeu
+\end{itemize}
+
+\begin{lstlisting}[caption=Gestion du redimensionnement dynamique]
+def sur_redimensionnement(self, event):
+    if event.widget != self.root:
+        return
+    
+    nouvelle_largeur = event.width
+    nouvelle_hauteur = event.height
+    
+    # Mise a jour des dimensions
+    self.LARGEUR_PIXELS = nouvelle_largeur
+    self.HAUTEUR_PIXELS = nouvelle_hauteur
+    
+    # Ajuster les dimensions du moteur de jeu
+    nouvelle_largeur_jeu = self.LARGEUR_PIXELS // self.TAILLE_CASE
+    nouvelle_hauteur_jeu = self.HAUTEUR_JEU // self.TAILLE_CASE
+    
+    # Ajuster position du vaisseau proportionnellement
+    ratio_x = nouvelle_largeur_jeu / self.game_engine.largeur
+    self.game_engine.vaisseau.x *= ratio_x
+    
+    # Mettre a jour les dimensions
+    self.game_engine.largeur = nouvelle_largeur_jeu
+    self.game_engine.hauteur = nouvelle_hauteur_jeu
+\end{lstlisting}
+
+\subsection{Boucle de rendu}
+
+Le jeu utilise une boucle de rendu asynchrone via \texttt{root.after()} :
+
+\begin{lstlisting}[caption=Boucle de rendu graphique optimisee]
+def boucle_mise_a_jour(self):
+    if not self.jeu_en_cours:
+        return
+    
+    # Mise a jour logique
+    self.game_engine.mettre_a_jour()
+    
+    # Rendu graphique
+    self.dessiner_fond_anime()
+    self.dessiner_objets()
+    self.dessiner_interface()
+    
+    # Relancer dans 30-50ms selon la performance
+    self.root.after(30, self.boucle_mise_a_jour)
+
+def dessiner_objets(self):
+    # Dessiner bonus
+    for bonus in self.game_engine.bonus:
+        couleur = bonus.info["couleur"]
+        self.canvas.create_oval(...)
+    
+    # Dessiner ennemis
+    for ennemi in self.game_engine.ennemis:
+        self.canvas.create_oval(..., fill='red')
+    
+    # Dessiner projectiles
+    for proj in self.game_engine.projectiles:
+        self.canvas.create_line(..., fill='yellow')
+    
+    # Dessiner vaisseau avec effet invincibilite
+    if self.game_engine.vaisseau.invincible:
+        # Clignotement
+        couleur = 'yellow' if frame % 4 < 2 else 'cyan'
+    else:
+        couleur = self.couleur_vaisseau_selon_bonus()
+    self.canvas.create_polygon(..., fill=couleur)
+\end{lstlisting}
+
+\section{Site Web de Scores}
+
+\subsection{Architecture du site}
+
+Le site web est une application \textbf{Single Page Application (SPA)} composée de :
+\begin{itemize}
+    \item \texttt{index.html} : Structure HTML, styles CSS et JavaScript embarqué
+    \item \texttt{scores.json} : Données chargées dynamiquement
+    \item \texttt{serveur\_web.py} : Serveur HTTP local optionnel
+\end{itemize}
+
+\subsection{Serveur HTTP Local}
+
+Un serveur HTTP simple permet de visualiser le leaderboard dans un navigateur :
+
+\begin{lstlisting}[caption=Serveur HTTP avec auto-ouverture]
+def demarrer_serveur():
+    PORT = 8000
+    handler = http.server.SimpleHTTPRequestHandler
+    
+    with socketserver.TCPServer(("", PORT), handler) as httpd:
+        url = f"http://localhost:{PORT}/index.html"
+        print(f"Serveur sur {url}")
+        
+        # Ouvrir automatiquement le navigateur
+        webbrowser.open(url)
+        
+        # Demarrer
+        httpd.serve_forever()
+\end{lstlisting}
+
+\subsection{Chargement des scores}
+
+Le site utilise l'API \texttt{fetch()} pour charger le fichier JSON :
+
+\begin{lstlisting}[language=html,caption=Chargement JavaScript des scores]
+async function chargerScores() {
+    const response = await fetch('scores.json');
+    const data = await response.json();
+    
+    // Creer le tableau des scores
+    let scoresArray = [];
+    for (const [joueur, info] of Object.entries(data)) {
+        scoresArray.push({
+            joueur: joueur,
+            score: info.meilleur_score,
+            parties: info.parties_jouees,
+            moyenne: (info.score_total / info.parties_jouees).toFixed(1)
+        });
+    }
+    
+    // Trier par score decroissant
+    scoresArray.sort((a, b) => b.score - a.score);
+    
+    // Afficher dans le tableau HTML
+    afficherTableau(scoresArray);
+}
+\end{lstlisting}
+
+\subsection{Fonctionnalités}
+
+\begin{itemize}
+    \item \textbf{Classement en temps réel} : Affichage des 20 meilleurs scores
+    \item \textbf{Médailles} : Symboles spéciaux pour les 3 premiers (������)
+    \item \textbf{Design moderne} : Gradient de fond, animations, effets hover
+    \item \textbf{Actualisation automatique} : Actualisation toutes les 30 secondes
+    \item \textbf{Bouton refresh} : Actualisation manuelle
+    \item \textbf{Responsive} : Adaptation mobile/tablette/desktop
+    \item \textbf{Statistiques} : Score total, moyenne, dernière mise à jour
+\end{itemize}
+
+\subsection{Export HTML automatique}
+
+La méthode \texttt{exporter\_html()} du ScoreManager génère automatiquement la page :
+
+\begin{lstlisting}[caption=Generation HTML du leaderboard]
+def exporter_html(self, fichier_sortie="index.html"):
+    classement = self.obtenir_classement(20)
+    
+    html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>Shooter Spatial - Leaderboard</title>
+    <style>
+        /* Styles modernes avec gradients */
+    </style>
+</head>
+<body>
+    <h1>�� SHOOTER SPATIAL ��</h1>
+"""
+    
+    for i, (joueur, score) in enumerate(classement, 1):
+        medaille = "��" if i == 1 else "��" if i == 2 else "��" if i == 3 else f"{i}."
+        html += f'<div class="score-entry top{i if i <= 3 else ""}">'
+        html += f'  <span>{medaille}</span>'
+        html += f'  <span>{joueur}</span>'
+        html += f'  <span>{score:,} pts</span>'
+        html += '</div>'
+    
+    html += """
+    <button onclick="location.reload()">�� Actualiser</button>
+</body>
+</html>
+"""
+    
+    with open(fichier_sortie, 'w', encoding='utf-8') as f:
+        f.write(html)
+\end{lstlisting}
+
+\section{Tests et Exemples d'Utilisation}
+
+\subsection{Scénario de test 1 : Partie rapide}
+
+\begin{enumerate}
+    \item Lancement du jeu (version GUI)
+    \item Saisie du nom : "Alice"
+    \item Destruction de 10 ennemis = 100 points
+    \item Nouveau record enregistré
+\end{enumerate}
+
+\subsection{Scénario de test 2 : Défaite}
+
+\begin{enumerate}
+    \item Lancement du jeu
+    \item Le joueur ne tire pas assez vite
+    \item Un ennemi atteint le bas de l'écran
+    \item Défaite avec score de 30 points
+    \item Score non enregistré (inférieur au record)
+\end{enumerate}
+
+\section{Conclusion}
+
+\subsection{Bilan du projet}
+
+Ce projet a permis de mettre en pratique quatre paradigmes de programmation étudiés :
+
+\begin{itemize}
+    \item \textbf{POO} : Architecture claire avec héritage (5 classes héritant d'ObjetVolant), encapsulation des données et méthodes, polymorphisme sur les collisions
+    \item \textbf{Procédural} : Boucle de jeu linéaire en version console avec séquence d'instructions
+    \item \textbf{Événementiel} : Interface graphique réactive avec tkinter (clavier, boutons, timers), gestion d'événements asynchrones
+    \item \textbf{Concurrent} : Threads pour musique, spawn d'ennemis et spawn de bonus s'exécutant en parallèle
+\end{itemize}
+
+Le système de scores avec persistance JSON, historique détaillé et le site web de leaderboard complètent le projet en ajoutant des fonctionnalités modernes et professionnelles.
+
+\subsection{Fonctionnalités implémentées}
+
+Le jeu inclut de nombreuses fonctionnalités avancées :
+
+\begin{enumerate}
+    \item \textbf{Système de bonus} : 5 types de bonus avec effets temporaires et pondération de probabilité
+    \item \textbf{Système de vies} : 3 à 5 vies avec invincibilité temporaire après perte
+    \item \textbf{Difficulté progressive} : Vitesse et fréquence d'apparition augmentent avec le score
+    \item \textbf{Interface moderne} : Menu animé, écrans multiples, responsive design
+    \item \textbf{Support multi-plateformes} : Version console (Windows/Linux/Mac) et GUI
+    \item \textbf{Musique} : Support de musique de fond avec pause et contrôle du volume
+    \item \textbf{Statistiques complètes} : Historique des 10 dernières parties, score moyen
+    \item \textbf{Leaderboard web} : Page HTML générée automatiquement avec design moderne
+    \item \textbf{Plein écran adaptatif} : Redimensionnement dynamique pour maximiser l'expérience
+    \item \textbf{Adaptation de la difficulté} : Vitesse du vaisseau adaptée à la taille d'écran
+\end{enumerate}
+
+\subsection{Perspectives d'amélioration}
+
+Plusieurs améliorations pourraient être apportées dans le futur :
+
+\begin{enumerate}
+    \item \textbf{Nouveaux types d'ennemis} 
+    \begin{itemize}
+        \item Ennemis avec patterns de déplacement différents (zigzag, cercles)
+        \item Ennemis qui tirent des projectiles
+        \item Boss de fin de niveau avec points de vie multiples
+    \end{itemize}
+    
+    \item \textbf{Power-ups avancés}
+    \begin{itemize}
+        \item Bouclier temporaire absorbant les dégâts
+        \item Ralentissement du temps
+        \item Bombe détruisant tous les ennemis à l'écran
+        \item Aimant attirant tous les bonus
+    \end{itemize}
+    
+    \item \textbf{Effets visuels et audio}
+    \begin{itemize}
+        \item Animations d'explosion avec particules
+        \item Effets sonores pour tirs, collisions, bonus
+        \item Musiques thématiques changeant selon le niveau
+        \item Effet de secousse d'écran lors des impacts
+    \end{itemize}
+    
+    \item \textbf{Modes de jeu additionnels}
+    \begin{itemize}
+        \item Mode survie : durée illimitée, difficulté croissante extrême
+        \item Mode campagne : série de niveaux avec objectifs
+        \item Mode contre-la-montre : atteindre un score en temps limité
+        \item Mode zen : pas de mort, pour l'entraînement
+    \end{itemize}
+    
+    \item \textbf{Multijoueur}
+    \begin{itemize}
+        \item Mode coopératif local (2 joueurs, clavier partagé)
+        \item Mode compétitif (qui survit le plus longtemps)
+        \item Leaderboard en ligne avec API REST
+        \item Synchronisation des scores entre machines
+    \end{itemize}
+    
+    \item \textbf{Personnalisation}
+    \begin{itemize}
+        \item Choix du vaisseau (apparence, caractéristiques)
+        \item Skins et thèmes visuels (espace, océan, cyberpunk)
+        \item Système de progression et déblocage de contenus
+        \item Achievements et trophées
+    \end{itemize}
+    
+    \item \textbf{Optimisations techniques}
+    \begin{itemize}
+        \item Pool d'objets pour éviter l'allocation mémoire excessive
+        \item Quadtree ou spatial hashing pour détection de collisions optimisée
+        \item Compilation avec Cython pour améliorer les performances
+        \item Support de shaders avec OpenGL via PyOpenGL
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Compétences acquises}
+
+Ce projet a renforcé :
+\begin{itemize}
+    \item La maîtrise de Python et de ses bibliothèques standard (tkinter, threading, json, pathlib)
+    \item La conception orientée objet et les diagrammes UML (classes, séquence, activités)
+    \item La gestion d'événements dans les interfaces graphiques
+    \item La programmation concurrente avec threads et synchronisation
+    \item La manipulation de fichiers JSON pour la persistance
+    \item Le développement web frontend (HTML/CSS/JavaScript)
+    \item La documentation technique avec \LaTeX\ et PlantUML
+    \item L'architecture logicielle et la séparation des responsabilités
+    \item Le debugging et la gestion d'erreurs
+    \item L'optimisation de performances (framerate, affichage)
+\end{itemize}
+
+\subsection{Réflexion sur les paradigmes}
+
+Ce projet démontre qu'aucun paradigme n'est supérieur aux autres : chacun a ses forces et son domaine d'application optimal. La clé d'un bon logiciel est de savoir combiner judicieusement les paradigmes selon les besoins :
+
+\begin{itemize}
+    \item \textbf{POO} pour structurer le code et favoriser la réutilisation
+    \item \textbf{Procédural} pour les algorithmes séquentiels et la logique de jeu
+    \item \textbf{Événementiel} pour les interfaces interactives et réactives
+    \item \textbf{Concurrent} pour les tâches parallèles et l'amélioration des performances
+\end{itemize}
+
+Cette approche multi-paradigme est représentative du développement logiciel moderne, où la flexibilité et l'adaptation aux problèmes sont essentielles.
+
+\section*{Annexes}
+
+\subsection*{A. Structure des fichiers}
+
+\begin{verbatim}
+shooter_spatial/
+│
+├── game/                       # Module principal du jeu
+│   ├── game_classes.py         # Classes POO (ObjetVolant, Vaisseau, 
+│   │                           #   Ennemi, Projectile, Bonus, GameEngine)
+│   ├── score_manager.py        # Gestion scores avec historique
+│   ├── shooter_console.py      # Version console plein écran
+│   ├── shooter_gui.py          # Version GUI avec menu
+│   ├── serveur_web.py          # Serveur HTTP pour leaderboard
+│   ├── index.html              # Leaderboard web (généré)
+│   └── scores.json             # Données des scores
+│
+├── shooter_console.bat         # Lanceur Windows (console)
+├── shooter_gui.bat             # Lanceur Windows (GUI)
+├── installer_dependencies.bat  # Installation automatique
+│
+├── diagramme.puml              # Diagrammes UML (PlantUML)
+├── rapport.tex                 # Ce rapport (LaTeX)
+├── README.md                   # Documentation utilisateur
+\end{verbatim}
+
+\subsection*{B. Commandes d'exécution}
+
+\paragraph{Installation des dépendances}
+\begin{verbatim}
+# Windows (recommandé) :
+installer_dependencies.bat
+
+# Ou manuellement :
+pip install pygame
+\end{verbatim}
+
+\paragraph{Version console}
+\begin{verbatim}
+python game/shooter_console.py
+# ou double-clic sur shooter_console.bat (Windows)
+\end{verbatim}
+
+\paragraph{Version graphique (recommandé)}
+\begin{verbatim}
+python game/shooter_gui.py
+# ou double-clic sur shooter_gui.bat (Windows)
+\end{verbatim}
+
+\paragraph{Serveur web pour leaderboard}
+\begin{verbatim}
+python game/serveur_web.py
+# Ouvre automatiquement http://localhost:8000/index.html
+\end{verbatim}
+
+\subsection*{C. Configuration et personnalisation}
+
+\paragraph{Difficulté (dans shooter\_console.py et shooter\_gui.py)}
+\begin{verbatim}
+class ConfigDifficulte:
+    VITESSE_INITIALE = 0.3    # Vitesse des ennemis
+    SPAWN_INITIAL = 2.0        # Intervalle spawn (secondes)
+    CHANCE_BONUS = 0.3         # Probabilité d'apparition bonus
+    VIES_DEPART = 3            # Nombre de vies initial
+\end{verbatim}
+
+\paragraph{Volume de la musique}
+\begin{verbatim}
+# Dans le constructeur de MusiqueThread
+pygame.mixer.music.set_volume(0.3)  # 0.0 à 1.0
+\end{verbatim}
+
+\paragraph{Dimensions de la fenêtre GUI}
+\begin{verbatim}
+# Adaptation automatique à l'écran
+# Peut être modifié dans shooter_gui.py ligne ~25
+largeur = 600  # Minimum
+hauteur = 800  # Minimum
+\end{verbatim}
+
+\end{document}

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooter Spatial - Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin: 40px 0;
+            text-shadow: 0 0 20px #00ff88;
+            color: #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88; }
+            to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88; }
+        }
+        
+        .leaderboard {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 50px rgba(0, 255, 136, 0.2);
+        }
+        
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .score-entry:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+        
+        .score-entry.top1 {
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .score-entry.top2 {
+            border-left-color: #c0c0c0;
+            background: rgba(192, 192, 192, 0.1);
+        }
+        
+        .score-entry.top3 {
+            border-left-color: #cd7f32;
+            background: rgba(205, 127, 50, 0.1);
+        }
+        
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+            min-width: 60px;
+        }
+        
+        .top1 .rank { color: #ffd700; }
+        .top2 .rank { color: #c0c0c0; }
+        .top3 .rank { color: #cd7f32; }
+        
+        .player {
+            flex-grow: 1;
+            font-size: 1.2em;
+        }
+        
+        .score {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00ff88;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .no-scores {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.5em;
+            color: #888;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .update-time {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .refresh-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 40px;
+            background: #00ff88;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #00dd77;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SHOOTER SPATIAL 🚀</h1>
+        <div class="leaderboard">
+
+            <div class="score-entry top1">
+                <div class="rank">🥇</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+            </div>
+
+            <div class="score-entry top2">
+                <div class="rank">🥈</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+            </div>
+
+            <div class="score-entry top3">
+                <div class="rank">🥉</div>
+                <div class="player">Test</div>
+                <div class="score">220 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+            </div>
+
+        </div>
+        <button class="refresh-btn" onclick="location.reload()">🔄 Actualiser</button>
+        <div class="update-time">
+            Dernière mise à jour : 07/02/2026 à 20:19:44
+        </div>
+        <div class="footer">
+            <p>🎮 Shooter Spatial - Classement des meilleurs joueurs 🎮</p>
+            <p style="margin-top: 10px; font-size: 0.8em;">Actualisez la page après chaque partie pour voir les nouveaux scores</p>
+        </div>
+    </div>
+</body>
+</html>
