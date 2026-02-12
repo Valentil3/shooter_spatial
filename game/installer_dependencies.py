@@ -188,12 +188,13 @@ def main():
             root_dir = game_dir.parent  # racine du projet
             
             # Fichier d'installation (déjà à la racine normalement)
-            bat_content = f"""@echo off
+            bat_content = """@echo off
 echo ============================================
 echo  SHOOTER SPATIAL - Installation
 echo ============================================
 echo.
-"{sys.executable}" "{game_dir / 'installer_dependencies.py'}"
+cd /d "%~dp0game"
+python installer_dependencies.py
 echo.
 pause
 """
@@ -204,9 +205,9 @@ pause
             print()
             
             # Fichier pour lancer la version GUI (sans fenêtre console)
-            pythonw_exe = sys.executable.replace('python.exe', 'pythonw.exe')
-            gui_bat = f"""@echo off
-start "" "{pythonw_exe}" "{game_dir / 'shooter_gui.py'}"
+            gui_bat = """@echo off
+cd /d "%~dp0game"
+start "" pythonw shooter_gui.py
 """
             gui_file = root_dir / "shooter_gui.bat"
             with open(gui_file, 'w', encoding='utf-8') as f:
@@ -216,9 +217,10 @@ start "" "{pythonw_exe}" "{game_dir / 'shooter_gui.py'}"
             print()
             
             # Fichier pour lancer la version Console
-            console_bat = f"""@echo off
+            console_bat = """@echo off
 title Shooter Spatial - Console
-"{sys.executable}" "{game_dir / 'shooter_console.py'}"
+cd /d "%~dp0game"
+python shooter_console.py
 pause
 """
             console_file = root_dir / "shooter_console.bat"
