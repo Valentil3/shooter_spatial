@@ -34,15 +34,64 @@ from score_manager import ScoreManager
 
 
 # ==============================================================================
+# VERSION CONSOLE DU MOTEUR DE JEU (avec collisions facilitées)
+# ==============================================================================
+
+class GameEngineConsole(GameEngine):
+    """Version console du moteur de jeu avec collisions plus permissives"""
+    
+    def _verifier_collisions(self):
+        """Vérifie toutes les collisions (version console avec marges augmentées)"""
+        # Collision vaisseau-ennemi (avec invincibilité)
+        if self.frame_count > self.vaisseau.invincible_jusqu_a:
+            for ennemi in self.ennemis:
+                if not ennemi.actif:
+                    continue
+                
+                # Marge réduite à 0.2 pour être moins punitif en console
+                if self.vaisseau.collision_avec(ennemi, marge=0.2):
+                    ennemi.actif = False
+                    if self.vaisseau.perdre_vie():
+                        self.jeu_termine = True
+        
+        # Collision projectile-ennemi
+        for projectile in self.projectiles:
+            if not projectile.actif:
+                continue
+            
+            for ennemi in self.ennemis:
+                if not ennemi.actif:
+                    continue
+                
+                # Marge augmentée à 1.5 pour faciliter les tirs en console
+                if projectile.collision_avec(ennemi, marge=1.5):
+                    projectile.actif = False
+                    ennemi.actif = False
+                    self.score += ennemi.points
+                    break
+        
+        # Collision vaisseau-bonus
+        for bonus_obj in self.bonus:
+            if not bonus_obj.actif:
+                continue
+            
+            # Marge augmentée à 1.0 pour faciliter la collecte en console
+            if self.vaisseau.collision_avec(bonus_obj, marge=1.0):
+                bonus_obj.actif = False
+                # Appliquer le bonus seulement s'il peut être ramassé
+                if self._peut_ramasser_bonus(bonus_obj.type):
+                    self._appliquer_bonus(bonus_obj.type)
+
+
+# ==============================================================================
 # CONFIGURATION DE LA DIFFICULTÉ
 # ==============================================================================
 
 def configurer_terminal_windows():
-    """Configure le terminal Windows en plein écran optimisé"""
+    """Configure le terminal Windows avec masquage du curseur et couleurs ANSI"""
     if sys.platform == 'win32':
         try:
             kernel32 = ctypes.windll.kernel32
-            user32 = ctypes.windll.user32
             
             # Obtenir le handle de la console
             h = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
@@ -56,37 +105,6 @@ def configurer_terminal_windows():
             cursor_info.bVisible = False
             kernel32.SetConsoleCursorInfo(h, ctypes.byref(cursor_info))
             
-            # Obtenir le handle de la fenêtre console
-            hwnd = kernel32.GetConsoleWindow()
-            
-            if hwnd:
-                # Maximiser la fenêtre
-                SW_MAXIMIZE = 3
-                user32.ShowWindow(hwnd, SW_MAXIMIZE)
-                
-                # Forcer le focus
-                user32.SetForegroundWindow(hwnd)
-                
-                # Attendre la maximisation
-                time.sleep(0.5)
-                
-                # Obtenir les dimensions de l'écran
-                screen_width = user32.GetSystemMetrics(0)  # SM_CXSCREEN
-                screen_height = user32.GetSystemMetrics(1)  # SM_CYSCREEN
-                
-                # Calculer les dimensions du terminal en caractères
-                # Approximation: 1 caractère ≈ 8 pixels largeur, 16 pixels hauteur
-                cols = min(240, screen_width // 8)
-                rows = min(90, screen_height // 16)
-                
-                # Définir le buffer avec ces dimensions
-                coord = wintypes._COORD(cols, 9999)
-                kernel32.SetConsoleScreenBufferSize(h, coord)
-                
-                # Redimensionner la fenêtre pour utiliser tout l'espace
-                rect = wintypes.SMALL_RECT(0, 0, cols - 1, rows - 1)
-                kernel32.SetConsoleWindowInfo(h, True, ctypes.byref(rect))
-            
             # Activer les codes ANSI pour les couleurs
             mode = wintypes.DWORD()
             kernel32.GetConsoleMode(h, ctypes.byref(mode))
@@ -94,7 +112,7 @@ def configurer_terminal_windows():
             
             return True
         except Exception as e:
-            print(f"⚠️  Impossible de configurer le plein écran: {e}")
+            print(f"⚠️  Impossible de configurer le terminal: {e}")
             return False
     return False
 
@@ -120,22 +138,20 @@ def restaurer_terminal_windows():
 
 
 def obtenir_taille_terminal():
-    """Obtient la taille maximale du terminal pour le plein écran"""
+    """Obtient la taille actuelle du terminal"""
     try:
-        # Attendre que le terminal soit bien redimensionné
-        time.sleep(0.2)
         colonnes, lignes = shutil.get_terminal_size()
         
         # Utiliser presque toute la surface disponible
         # Laisser de l'espace pour l'interface (score, commandes, etc.)
-        largeur_jeu = max(100, colonnes - 4)  # Largeur maximale
-        hauteur_jeu = max(40, lignes - 8)     # Hauteur maximale
+        largeur_jeu = max(80, colonnes - 4)   # Largeur avec marge
+        hauteur_jeu = max(30, lignes - 8)      # Hauteur avec marge
         
         return largeur_jeu, hauteur_jeu
     except Exception as e:
         print(f"⚠️  Erreur détection taille: {e}")
-        # Valeurs par défaut pour grand écran
-        return 200, 50
+        # Valeurs par défaut sûres
+        return 120, 40
 
 
 class ConfigDifficulte:
@@ -535,14 +551,9 @@ def afficher_grille(game_engine: GameEngine, musique: MusiqueThread, ennemis_det
     # Afficher tout d'un coup (évite le clignotement)
     output = buffer.getvalue()
     
-    # Sur Windows, utiliser cls, sinon utiliser les codes ANSI
-    if sys.platform == 'win32':
-        os.system('cls')
-        print(output, end='', flush=True)
-    else:
-        # Effacer l'écran et repositionner le curseur
-        # \033[2J efface l'écran, \033[H repositionne en haut à gauche
-        print('\033[2J\033[H' + output, end='', flush=True)
+    # Utiliser les codes ANSI pour repositionner le curseur (plus rapide que cls)
+    # \033[H repositionne en haut à gauche, \033[2J efface l'écran si nécessaire
+    print('\033[H' + output, end='', flush=True)
 
 
 # ==============================================================================
@@ -571,18 +582,26 @@ def boucle_jeu(game_engine: GameEngine, nom_joueur: str):
     # Écran de démarrage
     nettoyer_ecran()
     print(f"\n  {Couleur.GREEN}{Couleur.BOLD}Bienvenue {nom_joueur} !{Couleur.RESET}")
-    print(f"  {Couleur.YELLOW}Taille du jeu adaptée: {game_engine.largeur}×{game_engine.hauteur}{Couleur.RESET}")
+    print(f"  {Couleur.YELLOW}Taille du jeu: {game_engine.largeur}×{game_engine.hauteur}{Couleur.RESET}")
+    print()
+    print(f"  {Couleur.YELLOW}💡 CONSEIL:{Couleur.RESET} {Couleur.CYAN}Mettez votre terminal en PLEIN ÉCRAN maintenant !{Couleur.RESET}")
+    print(f"  {Couleur.GRAY}(F11 ou clic sur le bouton maximiser){Couleur.RESET}")
     print(f"\n  {Couleur.CYAN}Démarrage dans 2 secondes...{Couleur.RESET}")
     time.sleep(2)
+    
+    # Effacer l'écran une seule fois au début
+    nettoyer_ecran()
     
     # Clavier non-bloquant
     with ClavierNonBloquant() as clavier:
         derniere_update = time.time()
         derniere_frame = time.time()
+        derniere_affichage = time.time()
         
         while not game_engine.jeu_termine:
             maintenant = time.time()
             delta = maintenant - derniere_frame
+            delta_affichage = maintenant - derniere_affichage
             
             # Contrôler le framerate
             if delta >= ConfigDifficulte.VITESSE_MAJ:
@@ -604,8 +623,10 @@ def boucle_jeu(game_engine: GameEngine, nom_joueur: str):
                     ennemis_tues = ennemis_avant - ennemis_apres
                     ennemis_detruits += ennemis_tues
                     spawner.ajuster_difficulte(ennemis_detruits)
-                
-                # Afficher l'état
+            
+            # Afficher moins souvent pour éviter le clignotement (15 FPS au lieu de 30)
+            if delta_affichage >= 0.067:  # environ 15 FPS
+                derniere_affichage = maintenant
                 afficher_grille(game_engine, musique, ennemis_detruits, temps_debut)
             
             # Lire les touches (sans bloquer)
@@ -687,7 +708,6 @@ def main():
     print("╔═════════════════════════════════════════════════════════════╗")
     print("║                                                             ║")
     print("║          🚀  SHOOTER SPATIAL - CONSOLE  🚀                  ║")
-    print("║                    MODE PLEIN ÉCRAN                         ║")
     print("║                                                             ║")
     print("╚═════════════════════════════════════════════════════════════╝")
     print(f"{Couleur.RESET}")
@@ -698,13 +718,20 @@ def main():
         print(f"{Couleur.GRAY}   Pour installer : pip install pygame{Couleur.RESET}")
         print()
     
-    print(f"{Couleur.CYAN}Taille du jeu: {largeur}×{hauteur} (plein écran adapté){Couleur.RESET}")
+    print(f"{Couleur.CYAN}Taille du terminal: {largeur}×{hauteur}{Couleur.RESET}")
+    print(f"{Couleur.GRAY}💡 Conseil: Maximisez votre terminal pour une meilleure expérience{Couleur.RESET}")
     print()
     
     # Demander le nom du joueur
     nom_joueur = input(f"{Couleur.GREEN}Entrez votre nom:{Couleur.RESET} ").strip()
     if not nom_joueur:
         nom_joueur = "Joueur"
+    
+    # Message conseil pour le plein écran
+    print()
+    print(f"{Couleur.YELLOW}💡 CONSEIL:{Couleur.RESET} {Couleur.CYAN}Mettez votre terminal en PLEIN ÉCRAN pour une meilleure expérience de jeu !{Couleur.RESET}")
+    print(f"{Couleur.GRAY}   (F11 ou clic sur le bouton maximiser){Couleur.RESET}")
+    print()
     
     # Charger les scores
     score_manager = ScoreManager()
@@ -713,8 +740,8 @@ def main():
     if meilleur_score > 0:
         print(f"\n{Couleur.YELLOW}Votre meilleur score:{Couleur.RESET} {Couleur.BOLD}{meilleur_score}{Couleur.RESET} points")
     
-    # Créer le jeu avec adaptation automatique de la taille
-    game_engine = GameEngine(largeur=largeur, hauteur=hauteur)
+    # Créer le jeu avec adaptation automatique de la taille (version console facilitée)
+    game_engine = GameEngineConsole(largeur=largeur, hauteur=hauteur)
     
     # Augmenter la vitesse du vaisseau pour une meilleure jouabilité console
     game_engine.vaisseau.vitesse_base = min(3.5, game_engine.vaisseau.vitesse_base * 1.5)
@@ -734,15 +761,15 @@ def main():
     
     # Afficher le classement
     print()
-    print(f"  {Couleur.BOLD}{Couleur.CYAN}╔{'═' * 50}╗{Couleur.RESET}")
-    print(f"  {Couleur.BOLD}{Couleur.CYAN}║{Couleur.YELLOW}          CLASSEMENT DES MEILLEURS JOUEURS          {Couleur.CYAN}║{Couleur.RESET}")
-    print(f"  {Couleur.BOLD}{Couleur.CYAN}╚{'═' * 50}╝{Couleur.RESET}")
+    print(f"  {Couleur.BOLD}{Couleur.CYAN}╔{'═' * 68}╗{Couleur.RESET}")
+    print(f"  {Couleur.BOLD}{Couleur.CYAN}║{Couleur.YELLOW}          CLASSEMENT DES MEILLEURS JOUEURS (Tri par score)          {Couleur.CYAN}║{Couleur.RESET}")
+    print(f"  {Couleur.BOLD}{Couleur.CYAN}╚{'═' * 68}╝{Couleur.RESET}")
     print()
     
-    classement = score_manager.obtenir_classement(10)
+    classement = score_manager.obtenir_classement(10, tri="score")
     
     if classement:
-        for i, (joueur, score) in enumerate(classement, 1):
+        for i, (joueur, score, date, _) in enumerate(classement, 1):
             if i == 1:
                 medaille = f"{Couleur.YELLOW}🥇{Couleur.RESET}"
                 couleur = Couleur.YELLOW
@@ -756,7 +783,9 @@ def main():
                 medaille = f"{Couleur.GRAY}{i:2d}.{Couleur.RESET}"
                 couleur = Couleur.GREEN
             
-            print(f"  {medaille} {couleur}{Couleur.BOLD}{joueur:.<30}{Couleur.RESET} {couleur}{score:>6}{Couleur.RESET} pts")
+            # Afficher avec date
+            date_courte = date.split()[0] if date != "Inconnue" else "---"
+            print(f"  {medaille} {couleur}{Couleur.BOLD}{joueur:.<22}{Couleur.RESET} {couleur}{score:>6}{Couleur.RESET} pts  │  {Couleur.GRAY}{date_courte}{Couleur.RESET}")
     else:
         print(f"  {Couleur.GRAY}Aucun score enregistré.{Couleur.RESET}")
     

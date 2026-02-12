@@ -37,10 +37,13 @@ class ObjetVolant:
         self.x += dx
         self.y += dy
     
-    def collision_avec(self, autre: 'ObjetVolant') -> bool:
-        """Vérifie si cet objet touche un autre objet"""
-        marge = 0.5
+    def collision_avec(self, autre: 'ObjetVolant', marge: float = 0.5) -> bool:
+        """Vérifie si cet objet touche un autre objet
         
+        Args:
+            autre: L'autre objet à tester
+            marge: Marge de tolérance pour la collision (plus c'est grand, plus c'est facile)
+        """
         return (self.x - marge < autre.x + autre.largeur and
                 self.x + self.largeur + marge > autre.x and
                 self.y - marge < autre.y + autre.hauteur and
@@ -93,11 +96,13 @@ class Vaisseau(ObjetVolant):
         """Déplace le vaisseau vers la gauche"""
         if self.x > 0:
             self.deplacer(-1 * self.vitesse_base * self.vitesse_bonus, 0)
+            self.x = max(0, self.x)  # Empêcher de sortir à gauche
     
     def deplacer_droite(self):
         """Déplace le vaisseau vers la droite"""
         if self.x < self.largeur_ecran - self.largeur:
             self.deplacer(1 * self.vitesse_base * self.vitesse_bonus, 0)
+            self.x = min(self.largeur_ecran - self.largeur, self.x)  # Empêcher de sortir à droite
     
     def deplacer_haut(self):
         """Déplace le vaisseau vers le haut"""

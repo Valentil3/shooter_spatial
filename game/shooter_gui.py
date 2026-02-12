@@ -26,10 +26,10 @@ except ImportError:
 
 
 class Config:
-    VITESSE_INITIALE = 0.1
+    VITESSE_INITIALE = 0.05
     VITESSE_MAX = 2.0
     SPAWN_INITIAL = 3000
-    SPAWN_MIN = 600
+    SPAWN_MIN = 1200
     CHANCE_BONUS = 0.30
 
 
@@ -54,19 +54,25 @@ def obtenir_dimensions_ecran(root):
 
 
 class EtoileAnimee:
-    def __init__(self, x, y, vitesse, taille, couleur, hauteur_max):
+    def __init__(self, x, y, vitesse, taille, couleur, hauteur_max, largeur_max=None):
         self.x = x
         self.y = y
         self.vitesse = vitesse
         self.taille = taille
         self.couleur = couleur
         self.hauteur_max = hauteur_max
+        self.largeur_max = largeur_max if largeur_max else hauteur_max
     
     def deplacer(self):
         self.y += self.vitesse
         if self.y > self.hauteur_max:
             self.y = 0
-            self.x = random.randint(0, int(self.hauteur_max * 0.75))
+            self.x = random.randint(0, self.largeur_max)
+    
+    def mettre_a_jour_dimensions(self, hauteur_max, largeur_max):
+        """Met à jour les dimensions max pour le redimensionnement"""
+        self.hauteur_max = hauteur_max
+        self.largeur_max = largeur_max
 
 
 class MusiqueThread(threading.Thread):
@@ -151,7 +157,7 @@ class MenuPrincipal:
             vitesse = random.uniform(0.2, 1.5)
             taille = random.randint(1, 3)
             couleur = random.choice(['white', '#ffffaa', '#aaaaff'])
-            self.etoiles.append(EtoileAnimee(x, y, vitesse, taille, couleur, self.HAUTEUR))
+            self.etoiles.append(EtoileAnimee(x, y, vitesse, taille, couleur, self.HAUTEUR, self.LARGEUR))
     
     def creer_interface(self):
         taille_titre = max(20, min(36, int(self.LARGEUR / 17)))
@@ -258,23 +264,26 @@ class EcranInstructions:
         self.largeur = largeur
         self.hauteur = hauteur
         
-        self.frame = tk.Frame(root, bg='#1a1a2e', width=largeur, height=hauteur)
+        self.frame = tk.Frame(root, bg='#0a0a1a', width=largeur, height=hauteur)
         self.creer_interface()
     
     def creer_interface(self):
-        taille_titre = max(18, min(28, int(self.hauteur / 28)))
-        taille_texte = max(9, min(12, int(self.hauteur / 70)))
+        taille_titre = max(20, min(32, int(self.hauteur / 25)))
+        taille_section = max(13, min(18, int(self.hauteur / 45)))
+        taille_texte = max(10, min(14, int(self.hauteur / 60)))
         taille_bouton = max(12, min(16, int(self.hauteur / 50)))
         
+        # Titre principal
         tk.Label(
             self.frame, text="📖 COMMENT JOUER",
             font=('Arial', taille_titre, 'bold'),
-            fg='#00ff88', bg='#1a1a2e'
-        ).pack(pady=15)
+            fg='#00ff88', bg='#0a0a1a'
+        ).pack(pady=20)
         
-        canvas = tk.Canvas(self.frame, bg='#1a1a2e', highlightthickness=0)
+        # Conteneur principal scrollable
+        canvas = tk.Canvas(self.frame, bg='#0a0a1a', highlightthickness=0)
         scrollbar = tk.Scrollbar(self.frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg='#1a1a2e')
+        scrollable_frame = tk.Frame(canvas, bg='#0a0a1a')
         
         scrollable_frame.bind(
             "<Configure>",
@@ -284,47 +293,172 @@ class EcranInstructions:
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         
-        instructions = [
-            "🎯 OBJECTIF : Détruire les ennemis et survivre",
-            "",
-            "⌨️ CONTRÔLES :",
-            "  ← → : Gauche / Droite",
-            "  ↑ ↓ : Haut / Bas",
-            "  ESPACE : Tirer",
-            "  P : Pause",
-            "",
-            "👾 ENNEMIS : Vaisseaux rouges",
-            "⚠️ Contact ou bas d'écran = -1 vie",
-            "",
-            "💎 BONUS :",
-            "  💖 Vie +1 (max 5)",
-            "  >> Vitesse",
-            "  = Tir double",
-            "  ≡ Tir triple",
-            "  !!! Tir rapide",
-            "",
-            "📊 +10 points par ennemi détruit",
+        # === OBJECTIF ===
+        self._section(scrollable_frame, "🎯 OBJECTIF", '#ff6b6b', taille_section)
+        self._texte(scrollable_frame, "Détruis les ennemis et survie le plus longtemps possible !", taille_texte + 1, '#ffffff')
+        self._texte(scrollable_frame, "Chaque ennemi détruit = +10 points 💰", taille_texte, '#ffd700')
+        self._separateur(scrollable_frame)
+        
+        # === CONTRÔLES ===
+        self._section(scrollable_frame, "⌨️ CONTRÔLES", '#4ecdc4', taille_section)
+        
+        ctrl_frame = tk.Frame(scrollable_frame, bg='#1a2a2a')
+        ctrl_frame.pack(fill=tk.X, padx=40, pady=8)
+        
+        controles = [
+            ("←→↑↓", "Déplacer le vaisseau"),
+            ("ESPACE", "Tirer 🔫"),
+            ("P", "Pause/Reprendre musique 🎵 (jeu continue)"),
+            ("ESC", "Quitter")
         ]
         
-        for txt in instructions:
+        for touche, desc in controles:
+            row = tk.Frame(ctrl_frame, bg='#1a2a2a')
+            row.pack(fill=tk.X, pady=4)
+            
             tk.Label(
-                scrollable_frame, text=txt,
+                row, text=touche,
+                font=('Consolas', taille_texte, 'bold'),
+                fg='#00ff88', bg='#0d1117',
+                relief=tk.RAISED, padx=8, pady=4, width=8
+            ).pack(side=tk.LEFT, padx=(0, 12))
+            
+            tk.Label(
+                row, text=desc,
                 font=('Arial', taille_texte),
-                fg='#cccccc' if txt else '#ffd700',
-                bg='#1a1a2e', anchor='w'
-            ).pack(fill=tk.X, padx=20, pady=2)
+                fg='#cccccc', bg='#1a2a2a', anchor='w'
+            ).pack(side=tk.LEFT)
         
-        canvas.pack(side="left", fill="both", expand=True, padx=10)
-        scrollbar.pack(side="right", fill="y")
+        self._separateur(scrollable_frame)
         
+        # === GAMEPLAY ===
+        self._section(scrollable_frame, "🎮 GAMEPLAY", '#ff88ff', taille_section)
+        
+        gameplay_frame = tk.Frame(scrollable_frame, bg='#1a1a2a')
+        gameplay_frame.pack(fill=tk.X, padx=40, pady=8)
+        
+        infos = [
+            ("👾", "Ennemis rouges", "Descendent vers toi", '#ff6666'),
+            ("💚", "3 vies", "Maximum 5 avec bonus", '#66ff66'),
+            ("🛡️", "Invincibilité", "Vaisseau clignote après dégât", '#ffff66'),
+            ("💥", "Collision", "Ennemi touché ou atteint le bas = -1 vie", '#ffaa66'),
+        ]
+        
+        for emoji, titre, desc, couleur in infos:
+            row = tk.Frame(gameplay_frame, bg='#1a1a2a')
+            row.pack(fill=tk.X, pady=3)
+            
+            tk.Label(
+                row, text=emoji,
+                font=('Arial', taille_texte + 2),
+                bg='#1a1a2a', width=3
+            ).pack(side=tk.LEFT)
+            
+            tk.Label(
+                row, text=titre,
+                font=('Arial', taille_texte, 'bold'),
+                fg=couleur, bg='#1a1a2a', width=12, anchor='w'
+            ).pack(side=tk.LEFT)
+            
+            tk.Label(
+                row, text=desc,
+                font=('Arial', taille_texte - 1),
+                fg='#aaaaaa', bg='#1a1a2a', anchor='w'
+            ).pack(side=tk.LEFT, padx=5)
+        
+        self._separateur(scrollable_frame)
+        
+        # === BONUS ===
+        self._section(scrollable_frame, "💎 BONUS (10 secondes)", '#ffd700', taille_section)
+        
+        bonus_frame = tk.Frame(scrollable_frame, bg='#0a0a1a')
+        bonus_frame.pack(fill=tk.X, padx=40, pady=8)
+        
+        bonus = [
+            ("+", "Vie +1", "#ff00ff"),
+            (">>", "Vitesse +50%", "#00ffff"),
+            ("=", "Tir Double", "#ffff00"),
+            ("≡", "Tir Triple", "#ff8800"),
+            ("!!!", "Tir Rapide", "#ff0000")
+        ]
+        
+        for symbole, nom, couleur in bonus:
+            row = tk.Frame(bonus_frame, bg='#0a0a1a')
+            row.pack(fill=tk.X, pady=2)
+            
+            tk.Label(
+                row, text=symbole,
+                font=('Consolas', taille_texte + 2, 'bold'),
+                fg=couleur, bg='#000000',
+                width=5, relief=tk.RAISED
+            ).pack(side=tk.LEFT, padx=(0, 15))
+            
+            tk.Label(
+                row, text=nom,
+                font=('Arial', taille_texte),
+                fg=couleur, bg='#0a0a1a', anchor='w'
+            ).pack(side=tk.LEFT)
+        
+        self._texte(scrollable_frame, "💡 Le vaisseau change de couleur selon le bonus actif", taille_texte - 1, '#888888')
+        self._separateur(scrollable_frame)
+        
+        # === ASTUCES ===
+        self._section(scrollable_frame, "💡 ASTUCES", '#00ff88', taille_section)
+        
+        astuces_frame = tk.Frame(scrollable_frame, bg='#0a1a0a')
+        astuces_frame.pack(fill=tk.X, padx=40, pady=8)
+        
+        astuces = [
+            "✓ Reste au centre de l'écran",
+            "✓ Collecte Tir Triple en priorité",
+            "✓ Combine Tir Triple + Tir Rapide 🔥",
+            "✓ Bouge constamment !"
+        ]
+        
+        for astuce in astuces:
+            tk.Label(
+                astuces_frame, text=astuce,
+                font=('Arial', taille_texte),
+                fg='#88ff88', bg='#0a1a0a', anchor='w', padx=10, pady=2
+            ).pack(fill=tk.X)
+        
+        # Espacement avant le bouton
+        tk.Label(scrollable_frame, text="", bg='#0a0a1a').pack(pady=15)
+        
+        # Bouton retour dans le contenu scrollable
         tk.Button(
-            self.frame, text="◀ RETOUR",
+            scrollable_frame, text="◀ RETOUR",
             command=self.callback_retour,
             font=('Arial', taille_bouton, 'bold'),
             bg='#00ff88', fg='black',
             activebackground='#00dd77',
-            relief=tk.FLAT, padx=20, pady=10, cursor='hand2'
-        ).pack(pady=10)
+            relief=tk.FLAT, padx=30, pady=12, cursor='hand2'
+        ).pack(pady=15)
+        
+        # Empaquetage du canvas et scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+    def _section(self, parent, texte, couleur, taille):
+        """Titre de section"""
+        tk.Label(
+            parent, text=texte,
+            font=('Arial', taille, 'bold'),
+            fg=couleur, bg='#0a0a1a'
+        ).pack(pady=(12, 5))
+    
+    def _texte(self, parent, texte, taille, couleur='#cccccc'):
+        """Label de texte"""
+        tk.Label(
+            parent, text=texte,
+            font=('Arial', taille),
+            fg=couleur, bg='#0a0a1a',
+            wraplength=self.largeur - 100
+        ).pack(padx=40, pady=2)
+    
+    def _separateur(self, parent):
+        """Ligne de séparation"""
+        tk.Frame(parent, bg='#333333', height=1).pack(fill=tk.X, padx=60, pady=12)
     
     def afficher(self):
         self.frame.pack(fill=tk.BOTH, expand=True)
@@ -340,6 +474,8 @@ class EcranScores:
         self.score_manager = score_manager
         self.largeur = largeur
         self.hauteur = hauteur
+        self.tri_actuel = "score"  # Par défaut: tri par score
+        self.ordre_actuel = "desc"  # Par défaut: ordre décroissant
         
         self.frame = tk.Frame(root, bg='#1a1a2e', width=largeur, height=hauteur)
         self.creer_interface()
@@ -355,49 +491,81 @@ class EcranScores:
             fg='#ffd700', bg='#1a1a2e'
         ).pack(pady=15)
         
-        frame_classement = tk.Frame(self.frame, bg='#1a1a2e')
-        frame_classement.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        # Boutons de tri
+        frame_tri = tk.Frame(self.frame, bg='#1a1a2e')
+        frame_tri.pack(pady=5)
         
-        classement = self.score_manager.obtenir_classement(10)
+        # Groupe Score
+        frame_score = tk.Frame(frame_tri, bg='#1a1a2e')
+        frame_score.pack(side=tk.LEFT, padx=5)
         
-        if not classement:
-            tk.Label(
-                frame_classement,
-                text="Aucun score\n\nLancez une partie !",
-                font=('Arial', taille_texte + 2),
-                fg='#888888', bg='#1a1a2e'
-            ).pack(pady=30)
-        else:
-            for i, (joueur, score) in enumerate(classement, 1):
-                if i == 1:
-                    bg, fg, med = '#2a2a1e', '#ffd700', '🥇'
-                elif i == 2:
-                    bg, fg, med = '#2a2a2a', '#c0c0c0', '🥈'
-                elif i == 3:
-                    bg, fg, med = '#2a2520', '#cd7f32', '🥉'
-                else:
-                    bg, fg, med = '#1a1a2e', '#00ff88', f'{i}.'
-                
-                frame_ligne = tk.Frame(frame_classement, bg=bg)
-                frame_ligne.pack(fill=tk.X, pady=1)
-                
-                tk.Label(
-                    frame_ligne, text=med,
-                    font=('Arial', taille_texte, 'bold'),
-                    fg=fg, bg=bg, width=4
-                ).pack(side=tk.LEFT, padx=3)
-                
-                tk.Label(
-                    frame_ligne, text=joueur,
-                    font=('Courier', taille_texte, 'bold'),
-                    fg='white', bg=bg, anchor='w'
-                ).pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-                
-                tk.Label(
-                    frame_ligne, text=f"{score} pts",
-                    font=('Courier', taille_texte, 'bold'),
-                    fg=fg, bg=bg, anchor='e', width=10
-                ).pack(side=tk.LEFT, padx=3)
+        tk.Button(
+            frame_score, text="🏆↓",
+            command=lambda: self.changer_tri("score", "desc"),
+            font=('Arial', taille_bouton - 2, 'bold'),
+            bg='#00ff88' if (self.tri_actuel == "score" and self.ordre_actuel == "desc") else '#555555',
+            fg='black' if (self.tri_actuel == "score" and self.ordre_actuel == "desc") else 'white',
+            relief=tk.FLAT, padx=6, pady=4, cursor='hand2'
+        ).pack(side=tk.LEFT, padx=1)
+        
+        tk.Button(
+            frame_score, text="🏆↑",
+            command=lambda: self.changer_tri("score", "asc"),
+            font=('Arial', taille_bouton - 2, 'bold'),
+            bg='#00ff88' if (self.tri_actuel == "score" and self.ordre_actuel == "asc") else '#555555',
+            fg='black' if (self.tri_actuel == "score" and self.ordre_actuel == "asc") else 'white',
+            relief=tk.FLAT, padx=6, pady=4, cursor='hand2'
+        ).pack(side=tk.LEFT, padx=1)
+        
+        # Groupe Date
+        frame_date = tk.Frame(frame_tri, bg='#1a1a2e')
+        frame_date.pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(
+            frame_date, text="📅↓",
+            command=lambda: self.changer_tri("date", "desc"),
+            font=('Arial', taille_bouton - 2, 'bold'),
+            bg='#00ff88' if (self.tri_actuel == "date" and self.ordre_actuel == "desc") else '#555555',
+            fg='black' if (self.tri_actuel == "date" and self.ordre_actuel == "desc") else 'white',
+            relief=tk.FLAT, padx=6, pady=4, cursor='hand2'
+        ).pack(side=tk.LEFT, padx=1)
+        
+        tk.Button(
+            frame_date, text="📅↑",
+            command=lambda: self.changer_tri("date", "asc"),
+            font=('Arial', taille_bouton - 2, 'bold'),
+            bg='#00ff88' if (self.tri_actuel == "date" and self.ordre_actuel == "asc") else '#555555',
+            fg='black' if (self.tri_actuel == "date" and self.ordre_actuel == "asc") else 'white',
+            relief=tk.FLAT, padx=6, pady=4, cursor='hand2'
+        ).pack(side=tk.LEFT, padx=1)
+        
+        # Groupe Pseudo
+        frame_pseudo = tk.Frame(frame_tri, bg='#1a1a2e')
+        frame_pseudo.pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(
+            frame_pseudo, text="👤 Z→A",
+            command=lambda: self.changer_tri("pseudo", "desc"),
+            font=('Arial', taille_bouton - 2, 'bold'),
+            bg='#00ff88' if (self.tri_actuel == "pseudo" and self.ordre_actuel == "desc") else '#555555',
+            fg='black' if (self.tri_actuel == "pseudo" and self.ordre_actuel == "desc") else 'white',
+            relief=tk.FLAT, padx=6, pady=4, cursor='hand2'
+        ).pack(side=tk.LEFT, padx=1)
+        
+        tk.Button(
+            frame_pseudo, text="👤 A→Z",
+            command=lambda: self.changer_tri("pseudo", "asc"),
+            font=('Arial', taille_bouton - 2, 'bold'),
+            bg='#00ff88' if (self.tri_actuel == "pseudo" and self.ordre_actuel == "asc") else '#555555',
+            fg='black' if (self.tri_actuel == "pseudo" and self.ordre_actuel == "asc") else 'white',
+            relief=tk.FLAT, padx=6, pady=4, cursor='hand2'
+        ).pack(side=tk.LEFT, padx=1)
+        
+        # Frame pour le classement (sera mis à jour dynamiquement)
+        self.frame_classement = tk.Frame(self.frame, bg='#1a1a2e')
+        self.frame_classement.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        self.afficher_classement()
         
         frame_boutons = tk.Frame(self.frame, bg='#1a1a2e')
         frame_boutons.pack(pady=10)
@@ -418,19 +586,83 @@ class EcranScores:
             relief=tk.FLAT, padx=10, pady=6, cursor='hand2'
         ).pack(side=tk.LEFT, padx=3)
     
+    def changer_tri(self, nouveau_tri, nouvel_ordre):
+        """Change le mode de tri et l'ordre, puis actualise l'affichage"""
+        if self.tri_actuel != nouveau_tri or self.ordre_actuel != nouvel_ordre:
+            self.tri_actuel = nouveau_tri
+            self.ordre_actuel = nouvel_ordre
+            # Recréer toute l'interface pour mettre à jour les boutons et le classement
+            for widget in self.frame.winfo_children():
+                widget.destroy()
+            self.creer_interface()
+    
+    def afficher_classement(self):
+        """Affiche le classement selon le tri et l'ordre actuels"""
+        taille_texte = max(8, min(11, int(self.hauteur / 75)))
+        
+        classement = self.score_manager.obtenir_classement(10, tri=self.tri_actuel, ordre=self.ordre_actuel)
+        
+        if not classement:
+            tk.Label(
+                self.frame_classement,
+                text="Aucun score\n\nLancez une partie !",
+                font=('Arial', taille_texte + 2),
+                fg='#888888', bg='#1a1a2e'
+            ).pack(pady=30)
+        else:
+            for i, (joueur, score, date, _) in enumerate(classement, 1):
+                if i == 1 and self.tri_actuel == "score" and self.ordre_actuel == "desc":
+                    bg, fg, med = '#2a2a1e', '#ffd700', '🥇'
+                elif i == 2 and self.tri_actuel == "score" and self.ordre_actuel == "desc":
+                    bg, fg, med = '#2a2a2a', '#c0c0c0', '🥈'
+                elif i == 3 and self.tri_actuel == "score" and self.ordre_actuel == "desc":
+                    bg, fg, med = '#2a2520', '#cd7f32', '🥉'
+                else:
+                    bg, fg, med = '#1a1a2e', '#00ff88', f'{i}.'
+                
+                frame_ligne = tk.Frame(self.frame_classement, bg=bg)
+                frame_ligne.pack(fill=tk.X, pady=1)
+                
+                tk.Label(
+                    frame_ligne, text=med,
+                    font=('Arial', taille_texte, 'bold'),
+                    fg=fg, bg=bg, width=4
+                ).pack(side=tk.LEFT, padx=3)
+                
+                tk.Label(
+                    frame_ligne, text=joueur,
+                    font=('Courier', taille_texte, 'bold'),
+                    fg='white', bg=bg, anchor='w'
+                ).pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
+                
+                tk.Label(
+                    frame_ligne, text=f"{score} pts",
+                    font=('Courier', taille_texte, 'bold'),
+                    fg=fg, bg=bg, anchor='e', width=10
+                ).pack(side=tk.LEFT, padx=3)
+                
+                # Afficher la date
+                date_courte = date.split()[0] if date != "Inconnue" else "---"
+                tk.Label(
+                    frame_ligne, text=date_courte,
+                    font=('Courier', taille_texte - 2),
+                    fg='#888888', bg=bg, anchor='e', width=12
+                ).pack(side=tk.LEFT, padx=3)
+    
     def ouvrir_web(self):
         try:
             self.score_manager.exporter_html()
-            chemin = Path("index.html")
+            script_dir = Path(__file__).parent
+            chemin = script_dir / "index.html"
             if chemin.exists():
-                import platform
-                systeme = platform.system()
-                if systeme == 'Windows':
-                    webbrowser.open(str(chemin.absolute()))
-                else:
-                    webbrowser.open(f"file://{chemin.absolute()}")
+                webbrowser.open(f"file:///{chemin.as_posix()}")
+            else:
+                messagebox.showwarning(
+                    "Fichier manquant",
+                    f"Le fichier index.html est introuvable dans:\n{script_dir}"
+                )
         except Exception as e:
-            messagebox.showerror("Erreur", str(e))
+            messagebox.showerror("Erreur", f"Impossible d'ouvrir le leaderboard web:\n{e}")
     
     def afficher(self):
         self.frame.pack(fill=tk.BOTH, expand=True)
@@ -589,7 +821,7 @@ class ShooterGUI:
             vitesse = random.uniform(0.3, 2.0)
             taille = random.randint(1, 3)
             couleur = random.choice(['white', '#ffffaa', '#aaaaff'])
-            self.etoiles.append(EtoileAnimee(x, y, vitesse, taille, couleur, self.HAUTEUR_JEU))
+            self.etoiles.append(EtoileAnimee(x, y, vitesse, taille, couleur, self.HAUTEUR_JEU, self.LARGEUR_PIXELS))
     
     def lancer_jeu(self):
         self.nom_joueur = simpledialog.askstring(
@@ -1155,6 +1387,35 @@ class ShooterGUI:
             cursor='hand2'
         ).pack(side=tk.LEFT, padx=8)
         
+        # Bouton Web (sous les principaux)
+        def ouvrir_web():
+            try:
+                script_dir = Path(__file__).parent
+                fichier_html = script_dir / "index.html"
+                if fichier_html.exists():
+                    webbrowser.open(f"file:///{fichier_html.as_posix()}")
+                else:
+                    messagebox.showwarning(
+                        "Fichier manquant",
+                        f"Le fichier index.html est introuvable dans:\n{script_dir}"
+                    )
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Impossible d'ouvrir le navigateur:\n{e}")
+        
+        tk.Button(
+            dialog,
+            text="🌐 Web",
+            command=ouvrir_web,
+            font=('Arial', 12, 'bold'),
+            bg='#00aaff',
+            fg='white',
+            activebackground='#0088dd',
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor='hand2'
+        ).pack(pady=(5, 2))
+        
         # Bouton Menu (séparé en bas)
         tk.Button(
             dialog,
@@ -1168,7 +1429,7 @@ class ShooterGUI:
             padx=25,
             pady=10,
             cursor='hand2'
-        ).pack(pady=20)
+        ).pack(pady=(2, 20))
 
 
 def main():

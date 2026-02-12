@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooter Spatial - Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin: 40px 0;
+            text-shadow: 0 0 20px #00ff88;
+            color: #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88; }
+            to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88; }
+        }
+        
+        .sort-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .sort-btn {
+            padding: 12px 25px;
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .sort-btn:hover {
+            background: rgba(0, 255, 136, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .sort-btn.active {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+        
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .order-icon {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        .leaderboard {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 50px rgba(0, 255, 136, 0.2);
+        }
+        
+        .score-entry {
+            display: grid;
+            grid-template-columns: 60px 1fr auto auto;
+            gap: 20px;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            align-items: center;
+        }
+        
+        .score-entry:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+        
+        .score-entry.top1 {
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .score-entry.top2 {
+            border-left-color: #c0c0c0;
+            background: rgba(192, 192, 192, 0.1);
+        }
+        
+        .score-entry.top3 {
+            border-left-color: #cd7f32;
+            background: rgba(205, 127, 50, 0.1);
+        }
+        
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .top1 .rank { color: #ffd700; }
+        .top2 .rank { color: #c0c0c0; }
+        .top3 .rank { color: #cd7f32; }
+        
+        .player {
+            font-size: 1.2em;
+        }
+        
+        .score {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00ff88;
+            text-align: right;
+            min-width: 120px;
+        }
+        
+        .date {
+            font-size: 0.9em;
+            color: #888;
+            min-width: 150px;
+            text-align: right;
+        }
+        
+        .no-scores {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.5em;
+            color: #888;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .update-time {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .refresh-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 40px;
+            background: #00ff88;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #00dd77;
+            transform: scale(1.05);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SHOOTER SPATIAL 🚀</h1>
+        
+        <div class="sort-buttons">
+            <div class="sort-group">
+                <button class="sort-btn active" onclick="changeTri('score', 'desc')" id="btn-score-desc">🏆 Score <span class="order-icon">↓</span></button>
+                <button class="sort-btn" onclick="changeTri('score', 'asc')" id="btn-score-asc">🏆 Score <span class="order-icon">↑</span></button>
+            </div>
+            <div class="sort-group">
+                <button class="sort-btn" onclick="changeTri('date', 'desc')" id="btn-date-desc">📅 Date <span class="order-icon">↓</span></button>
+                <button class="sort-btn" onclick="changeTri('date', 'asc')" id="btn-date-asc">📅 Date <span class="order-icon">↑</span></button>
+            </div>
+            <div class="sort-group">
+                <button class="sort-btn" onclick="changeTri('pseudo', 'desc')" id="btn-pseudo-desc">👤 Pseudo <span class="order-icon">Z→A</span></button>
+                <button class="sort-btn" onclick="changeTri('pseudo', 'asc')" id="btn-pseudo-asc">👤 Pseudo <span class="order-icon">A→Z</span></button>
+            </div>
+        </div>
+        
+        <div class="leaderboard">
+
+            <div id="classement-score-desc" class="classement-vue">
+                
+            <div class="score-entry top1">
+                <div class="rank">🥇</div>
+                <div class="player">Bob</div>
+                <div class="score">2,100 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry top2">
+                <div class="rank">🥈</div>
+                <div class="player">Zara</div>
+                <div class="score">1,800 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry top3">
+                <div class="rank">🥉</div>
+                <div class="player">Alice</div>
+                <div class="score">1,500 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">David</div>
+                <div class="score">900 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+                <div class="date">2026-01-31 16:55:47</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+                <div class="date">2026-02-04 16:06:40</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Test</div>
+                <div class="score">380 pts</div>
+                <div class="date">2026-02-12 20:59:51</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+                <div class="date">2026-02-07 18:55:34</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+                <div class="date">2026-02-07 18:12:06</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-01-31 16:01:26</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">Valentin</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-02-12 21:17:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">12.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+                <div class="date">2026-02-07 20:18:41</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">13.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+                <div class="date">2026-02-07 20:19:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">14.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+                <div class="date">2026-02-07 19:19:39</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">15.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+                <div class="date">2026-02-07 19:14:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">16.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+                <div class="date">2026-02-07 19:23:38</div>
+            </div>
+
+            </div>
+            <div id="classement-score-asc" class="classement-vue hidden">
+                
+            <div class="score-entry ">
+                <div class="rank">1.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+                <div class="date">2026-02-07 19:23:38</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">2.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+                <div class="date">2026-02-07 19:14:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">3.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+                <div class="date">2026-02-07 19:19:39</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+                <div class="date">2026-02-07 20:19:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+                <div class="date">2026-02-07 20:18:41</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-01-31 16:01:26</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Valentin</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-02-12 21:17:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+                <div class="date">2026-02-07 18:12:06</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+                <div class="date">2026-02-07 18:55:34</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Test</div>
+                <div class="score">380 pts</div>
+                <div class="date">2026-02-12 20:59:51</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+                <div class="date">2026-02-04 16:06:40</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">12.</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+                <div class="date">2026-01-31 16:55:47</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">13.</div>
+                <div class="player">David</div>
+                <div class="score">900 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">14.</div>
+                <div class="player">Alice</div>
+                <div class="score">1,500 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">15.</div>
+                <div class="player">Zara</div>
+                <div class="score">1,800 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">16.</div>
+                <div class="player">Bob</div>
+                <div class="score">2,100 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            </div>
+            <div id="classement-date-desc" class="classement-vue hidden">
+                
+            <div class="score-entry ">
+                <div class="rank">1.</div>
+                <div class="player">David</div>
+                <div class="score">900 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">2.</div>
+                <div class="player">Zara</div>
+                <div class="score">1,800 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">3.</div>
+                <div class="player">Bob</div>
+                <div class="score">2,100 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">Alice</div>
+                <div class="score">1,500 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Valentin</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-02-12 21:17:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-01-31 16:01:26</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+                <div class="date">2026-02-04 16:06:40</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+                <div class="date">2026-01-31 16:55:47</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">Test</div>
+                <div class="score">380 pts</div>
+                <div class="date">2026-02-12 20:59:51</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+                <div class="date">2026-02-07 18:12:06</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+                <div class="date">2026-02-07 18:55:34</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">12.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+                <div class="date">2026-02-07 19:19:39</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">13.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+                <div class="date">2026-02-07 20:18:41</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">14.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+                <div class="date">2026-02-07 19:14:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">15.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+                <div class="date">2026-02-07 19:23:38</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">16.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+                <div class="date">2026-02-07 20:19:44</div>
+            </div>
+
+            </div>
+            <div id="classement-date-asc" class="classement-vue hidden">
+                
+            <div class="score-entry ">
+                <div class="rank">1.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-01-31 16:01:26</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">2.</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+                <div class="date">2026-02-04 16:06:40</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">3.</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+                <div class="date">2026-01-31 16:55:47</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">Test</div>
+                <div class="score">380 pts</div>
+                <div class="date">2026-02-12 20:59:51</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+                <div class="date">2026-02-07 18:12:06</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+                <div class="date">2026-02-07 18:55:34</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+                <div class="date">2026-02-07 19:19:39</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+                <div class="date">2026-02-07 20:18:41</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+                <div class="date">2026-02-07 19:14:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+                <div class="date">2026-02-07 19:23:38</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+                <div class="date">2026-02-07 20:19:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">12.</div>
+                <div class="player">Valentin</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-02-12 21:17:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">13.</div>
+                <div class="player">Alice</div>
+                <div class="score">1,500 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">14.</div>
+                <div class="player">Bob</div>
+                <div class="score">2,100 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">15.</div>
+                <div class="player">Zara</div>
+                <div class="score">1,800 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">16.</div>
+                <div class="player">David</div>
+                <div class="score">900 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            </div>
+            <div id="classement-pseudo-desc" class="classement-vue hidden">
+                
+            <div class="score-entry ">
+                <div class="rank">1.</div>
+                <div class="player">Zara</div>
+                <div class="score">1,800 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">2.</div>
+                <div class="player">Valentin</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-02-12 21:17:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">3.</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+                <div class="date">2026-01-31 16:55:47</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+                <div class="date">2026-02-04 16:06:40</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-01-31 16:01:26</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+                <div class="date">2026-02-07 19:14:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+                <div class="date">2026-02-07 19:19:39</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+                <div class="date">2026-02-07 20:18:41</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+                <div class="date">2026-02-07 20:19:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+                <div class="date">2026-02-07 19:23:38</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+                <div class="date">2026-02-07 18:12:06</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">12.</div>
+                <div class="player">Test</div>
+                <div class="score">380 pts</div>
+                <div class="date">2026-02-12 20:59:51</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">13.</div>
+                <div class="player">David</div>
+                <div class="score">900 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">14.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+                <div class="date">2026-02-07 18:55:34</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">15.</div>
+                <div class="player">Bob</div>
+                <div class="score">2,100 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">16.</div>
+                <div class="player">Alice</div>
+                <div class="score">1,500 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            </div>
+            <div id="classement-pseudo-asc" class="classement-vue hidden">
+                
+            <div class="score-entry ">
+                <div class="rank">1.</div>
+                <div class="player">Alice</div>
+                <div class="score">1,500 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">2.</div>
+                <div class="player">Bob</div>
+                <div class="score">2,100 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">3.</div>
+                <div class="player">Ceci est un test</div>
+                <div class="score">180 pts</div>
+                <div class="date">2026-02-07 18:55:34</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">4.</div>
+                <div class="player">David</div>
+                <div class="score">900 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">5.</div>
+                <div class="player">Test</div>
+                <div class="score">380 pts</div>
+                <div class="date">2026-02-12 20:59:51</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">6.</div>
+                <div class="player">Test$</div>
+                <div class="score">90 pts</div>
+                <div class="date">2026-02-07 18:12:06</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">7.</div>
+                <div class="player">Teste</div>
+                <div class="score">0 pts</div>
+                <div class="date">2026-02-07 19:23:38</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">8.</div>
+                <div class="player">Tester</div>
+                <div class="score">40 pts</div>
+                <div class="date">2026-02-07 20:18:41</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">9.</div>
+                <div class="player">TEster</div>
+                <div class="score">30 pts</div>
+                <div class="date">2026-02-07 20:19:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">10.</div>
+                <div class="player">Testt</div>
+                <div class="score">20 pts</div>
+                <div class="date">2026-02-07 19:19:39</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">11.</div>
+                <div class="player">Tesyer</div>
+                <div class="score">10 pts</div>
+                <div class="date">2026-02-07 19:14:44</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">12.</div>
+                <div class="player">Val</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-01-31 16:01:26</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">13.</div>
+                <div class="player">Vale</div>
+                <div class="score">550 pts</div>
+                <div class="date">2026-02-04 16:06:40</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">14.</div>
+                <div class="player">Valee</div>
+                <div class="score">580 pts</div>
+                <div class="date">2026-01-31 16:55:47</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">15.</div>
+                <div class="player">Valentin</div>
+                <div class="score">70 pts</div>
+                <div class="date">2026-02-12 21:17:23</div>
+            </div>
+
+            <div class="score-entry ">
+                <div class="rank">16.</div>
+                <div class="player">Zara</div>
+                <div class="score">1,800 pts</div>
+                <div class="date">2026-02-12 21:20:23</div>
+            </div>
+
+            </div>
+
+        </div>
+        <button class="refresh-btn" onclick="location.reload()">🔄 Actualiser</button>
+        <div class="update-time">
+            Dernière mise à jour : 12/02/2026 à 21:25:38
+        </div>
+        <div class="footer">
+            <p>🎮 Shooter Spatial - Classement des meilleurs joueurs 🎮</p>
+            <p style="margin-top: 10px; font-size: 0.8em;">Actualisez la page après chaque partie pour voir les nouveaux scores</p>
+        </div>
+    </div>
+    
+    <script>
+        function changeTri(type, ordre) {
+            // Masquer tous les classements
+            document.querySelectorAll('.classement-vue').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Retirer la classe active de tous les boutons
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Afficher le classement sélectionné
+            const classementId = 'classement-' + type + '-' + ordre;
+            document.getElementById(classementId).classList.remove('hidden');
+            
+            // Activer le bouton correspondant
+            const btnId = 'btn-' + type + '-' + ordre;
+            document.getElementById(btnId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
