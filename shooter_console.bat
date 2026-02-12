@@ -1,4 +1,5 @@
 @echo off
 title Shooter Spatial - Console
-"C:\Users\Valentin L\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe" "Z:\Synchro PC DELL E5470\Users\Valentin L\Documents\Licence info\Paradigme Programmation\Projet\shooter_spatial\game\shooter_console.py"
+cd /d "%~dp0game"
+python shooter_console.py
 pause
